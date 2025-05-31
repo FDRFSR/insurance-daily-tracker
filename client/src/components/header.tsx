@@ -1,13 +1,40 @@
 import { Bell, Shield } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import type { TaskStats } from "@/lib/types";
+import type { Task } from "@shared/schema";
 
 export default function Header() {
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  
   const { data: stats } = useQuery<TaskStats>({
     queryKey: ["/api/tasks/stats"],
   });
 
+  // Query per le attività in scadenza e in ritardo
+  const { data: urgentTasks = [] } = useQuery<Task[]>({
+    queryKey: ["/api/tasks", "status=overdue"],
+  });
+
+  const { data: todayTasks = [] } = useQuery<Task[]>({
+    queryKey: ["/api/tasks"],
+    select: (tasks) => {
+      const today = new Date().toISOString().split('T')[0];
+      return tasks.filter(task => 
+        task.dueDate === today && !task.completed
+      );
+    }
+  });
+
   const overdueCount = stats?.overdue || 0;
+  const totalNotifications = overdueCount + (todayTasks?.length || 0);
+
+  const formatTime = (time: string | null) => {
+    if (!time) return "";
+    return time;
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -23,14 +50,69 @@ export default function Header() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <button className="relative p-2 rounded-full hover:bg-gray-100 transition-colors">
-              <Bell className="h-5 w-5 text-gray-600" />
-              {overdueCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {overdueCount}
-                </span>
-              )}
-            </button>
+            <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <Bell className="h-5 w-5 text-gray-600" />
+                  {totalNotifications > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {totalNotifications}
+                    </span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-0" align="end">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="font-semibold text-gray-900">Notifiche</h3>
+                </div>
+                <div className="max-h-96 overflow-y-auto">
+                  {urgentTasks.length === 0 && todayTasks.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      Nessuna notifica
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {/* Attività in ritardo */}
+                      {urgentTasks.map((task) => (
+                        <div key={`overdue-${task.id}`} className="p-4 hover:bg-red-50">
+                          <div className="flex items-start space-x-3">
+                            <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{task.title}</p>
+                              <p className="text-xs text-red-600 font-medium">IN RITARDO</p>
+                              {task.client && (
+                                <p className="text-xs text-gray-600">Cliente: {task.client}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Attività di oggi */}
+                      {todayTasks.map((task) => (
+                        <div key={`today-${task.id}`} className="p-4 hover:bg-orange-50">
+                          <div className="flex items-start space-x-3">
+                            <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{task.title}</p>
+                              <p className="text-xs text-orange-600 font-medium">
+                                OGGI {formatTime(task.dueTime)}
+                              </p>
+                              {task.client && (
+                                <p className="text-xs text-gray-600">Cliente: {task.client}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
             
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
