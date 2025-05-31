@@ -5,6 +5,16 @@ import { insertTaskSchema, updateTaskSchema } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Get task statistics - must be before the /:id route
+  app.get("/api/tasks/stats", async (req, res) => {
+    try {
+      const stats = await storage.getTaskStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel recupero delle statistiche" });
+    }
+  });
+
   // Get all tasks
   app.get("/api/tasks", async (req, res) => {
     try {
@@ -109,16 +119,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Attività eliminata con successo" });
     } catch (error) {
       res.status(500).json({ message: "Errore nell'eliminazione dell'attività" });
-    }
-  });
-
-  // Get task statistics
-  app.get("/api/tasks/stats", async (req, res) => {
-    try {
-      const stats = await storage.getTaskStats();
-      res.json(stats);
-    } catch (error) {
-      res.status(500).json({ message: "Errore nel recupero delle statistiche" });
     }
   });
 

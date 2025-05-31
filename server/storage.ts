@@ -126,8 +126,15 @@ export class MemStorage implements IStorage {
     const id = this.currentId++;
     const now = new Date();
     const task: Task = {
-      ...insertTask,
       id,
+      title: insertTask.title,
+      description: insertTask.description || null,
+      category: insertTask.category,
+      client: insertTask.client || null,
+      priority: insertTask.priority || "medium",
+      status: insertTask.status || "pending",
+      dueDate: insertTask.dueDate || null,
+      dueTime: insertTask.dueTime || null,
       completed: false,
       completedAt: null,
       createdAt: now,

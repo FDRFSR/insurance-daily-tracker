@@ -116,8 +116,8 @@ export default function Sidebar() {
           </div>
           
           <div className="grid grid-cols-7 gap-1 text-xs text-center">
-            {["L", "M", "M", "G", "V", "S", "D"].map(day => (
-              <div key={day} className="p-2 text-gray-500 font-medium">{day}</div>
+            {["L", "M", "M", "G", "V", "S", "D"].map((day, index) => (
+              <div key={`day-header-${index}`} className="p-2 text-gray-500 font-medium">{day}</div>
             ))}
             
             {calendarDays.map((date, index) => (
