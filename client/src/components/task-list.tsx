@@ -45,16 +45,25 @@ export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Build query parameters basati direttamente sugli stati
-  const queryParams = useMemo(() => {
-    const params = new URLSearchParams();
-    if (selectedCategory && selectedCategory !== "all") params.append("category", selectedCategory);
-    if (searchQuery) params.append("search", searchQuery);
-    return params;
-  }, [selectedCategory, searchQuery]);
-
+  // Query diretta con parametri semplici
   const { data: allTasks = [], isLoading } = useQuery<Task[]>({
-    queryKey: ["/api/tasks", queryParams.toString()],
+    queryKey: ["/api/tasks", selectedCategory, searchQuery],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedCategory && selectedCategory !== "all") {
+        params.append("category", selectedCategory);
+      }
+      if (searchQuery) {
+        params.append("search", searchQuery);
+      }
+      
+      const url = `/api/tasks${params.toString() ? `?${params.toString()}` : ''}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    },
   });
 
   // Filtra le task in base alla data selezionata (applicato sui risultati già filtrati)
