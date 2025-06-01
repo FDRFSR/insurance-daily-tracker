@@ -10,6 +10,9 @@ import type { Task } from "@shared/schema";
 
 export default function Header() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  // State per tenere traccia delle notifiche nascoste - SPOSTATO QUI PRIMA
+  const [dismissedNotifications, setDismissedNotifications] = useState<Set<number>>(new Set());
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -17,29 +20,24 @@ export default function Header() {
     queryKey: ["/api/tasks/stats"],
   });
 
-  // Query per le attività in scadenza e in ritardo (filtrate)
-  const { data: urgentTasks = [] } = useQuery<Task[]>({
+  // Query per le attività in scadenza e in ritardo
+  const { data: allUrgentTasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks", "status=overdue"],
-    select: (tasks) => {
-      // Filtra le notifiche nascoste
-      return tasks.filter(task => !dismissedNotifications.has(task.id));
-    }
   });
 
-  const { data: todayTasks = [] } = useQuery<Task[]>({
+  const { data: allTodayTasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
     select: (tasks) => {
       const today = new Date().toISOString().split('T')[0];
       return tasks.filter(task => 
-        task.dueDate === today && 
-        !task.completed && 
-        !dismissedNotifications.has(task.id) // Filtra anche qui
+        task.dueDate === today && !task.completed
       );
     }
   });
 
-  // State per tenere traccia delle notifiche nascoste
-  const [dismissedNotifications, setDismissedNotifications] = useState<Set<number>>(new Set());
+  // Filtra localmente le notifiche nascoste
+  const urgentTasks = allUrgentTasks.filter(task => !dismissedNotifications.has(task.id));
+  const todayTasks = allTodayTasks.filter(task => !dismissedNotifications.has(task.id));
 
   // Mutation per nascondere le notifiche (senza completare l'attività)
   const dismissNotificationMutation = useMutation({
@@ -49,7 +47,11 @@ export default function Header() {
     },
     onSuccess: (taskId) => {
       // Aggiungi l'ID alle notifiche nascoste
-      setDismissedNotifications(prev => new Set([...prev, taskId]));
+      setDismissedNotifications(prev => {
+        const newSet = new Set(prev);
+        newSet.add(taskId);
+        return newSet;
+      });
       
       toast({
         title: "Notifica nascosta",
@@ -58,7 +60,7 @@ export default function Header() {
     }
   });
 
-  const overdueCount = stats?.overdue || 0;
+  const overdueCount = urgentTasks.length; // Usa la lunghezza filtrata invece che dal DB
   const totalNotifications = overdueCount + (todayTasks?.length || 0);
 
   const formatTime = (time: string | null) => {
