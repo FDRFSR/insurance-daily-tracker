@@ -12,19 +12,36 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [preselectedCategory, setPreselectedCategory] = useState<string | undefined>(undefined); // 🎯 Nuovo stato per categoria preselezionata
 
   const handleTaskEdit = (task: Task) => {
     setEditingTask(task);
+    setPreselectedCategory(undefined); // Reset categoria quando modifichiamo
     setIsModalOpen(true);
   };
 
   const handleNewTask = () => {
     setEditingTask(null);
+    setPreselectedCategory(undefined); // Reset categoria per nuova attività normale
     setIsModalOpen(true);
   };
 
   const handleDateSelect = (date: string | null) => {
     setSelectedDate(date);
+  };
+
+  // 🎯 Nuovo handler per le azioni rapide dalla sidebar
+  const handleQuickAction = (category: string) => {
+    setEditingTask(null); // Assicurati che non stiamo modificando
+    setPreselectedCategory(category); // Imposta la categoria
+    setIsModalOpen(true); // Apri il modal
+  };
+
+  // 🎯 Handler per chiudere il modal e resettare tutto
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingTask(null);
+    setPreselectedCategory(undefined); // Reset categoria quando chiudiamo
   };
 
   return (
@@ -42,6 +59,7 @@ export default function Dashboard() {
           <Sidebar 
             onDateSelect={handleDateSelect}
             selectedDate={selectedDate}
+            onQuickAction={handleQuickAction} // 🎯 Passa l'handler per le azioni rapide
           />
         </div>
       </div>
@@ -57,11 +75,10 @@ export default function Dashboard() {
 
       <TaskModal
         isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingTask(null);
-        }}
+        onClose={handleCloseModal} // 🎯 Usa il nuovo handler che resetta tutto
         task={editingTask}
+        preselectedCategory={preselectedCategory} // 🎯 Passa la categoria preselezionata
+        preselectedDate={selectedDate || undefined} // 🎯 Converti null a undefined per TypeScript
       />
     </div>
   );

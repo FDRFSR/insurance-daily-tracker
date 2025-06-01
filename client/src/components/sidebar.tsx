@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 interface SidebarProps {
   onDateSelect?: (date: string | null) => void;
   selectedDate?: string | null;
+  onQuickAction?: (category: string) => void; // 🎯 Nuova prop per le azioni rapide
 }
 
-export default function Sidebar({ onDateSelect, selectedDate }: SidebarProps) {
+export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: SidebarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const handlePreviousMonth = () => {
@@ -97,36 +98,48 @@ export default function Sidebar({ onDateSelect, selectedDate }: SidebarProps) {
 
   const calendarDays = generateCalendarDays();
 
+  // 🎯 Mappa le categorie alle chiavi utilizzate nel backend
   const quickActions = [
     {
       title: "Chiamata Cliente",
       description: "Programma una chiamata",
       icon: Phone,
       color: "bg-blue-50 hover:bg-blue-100",
-      iconColor: "bg-blue-600"
+      iconColor: "bg-blue-600",
+      category: "calls" // 🎯 Aggiunto campo categoria
     },
     {
       title: "Nuovo Preventivo", 
       description: "Crea un preventivo",
       icon: Calculator,
       color: "bg-green-50 hover:bg-green-100",
-      iconColor: "bg-green-600"
+      iconColor: "bg-green-600",
+      category: "quotes" // 🎯 Aggiunto campo categoria
     },
     {
       title: "Gestisci Sinistro",
       description: "Segui una pratica",
       icon: FileText,
       color: "bg-red-50 hover:bg-red-100", 
-      iconColor: "bg-red-600"
+      iconColor: "bg-red-600",
+      category: "claims" // 🎯 Aggiunto campo categoria
     },
     {
       title: "Attività Amministrativa",
       description: "Documenti e pratiche",
       icon: Cog,
       color: "bg-orange-50 hover:bg-orange-100",
-      iconColor: "bg-orange-600"
+      iconColor: "bg-orange-600",
+      category: "documents" // 🎯 Aggiunto campo categoria
     }
   ];
+
+  // 🎯 Handler per le azioni rapide
+  const handleQuickAction = (category: string) => {
+    if (onQuickAction) {
+      onQuickAction(category);
+    }
+  };
 
   const recentClients = [
     {
@@ -216,7 +229,8 @@ export default function Sidebar({ onDateSelect, selectedDate }: SidebarProps) {
           {quickActions.map((action, index) => (
             <button
               key={index}
-              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left ${action.color}`}
+              onClick={() => handleQuickAction(action.category)} // 🎯 Aggiunto onClick handler
+              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left ${action.color} hover:scale-[1.02] transform transition-transform`}
             >
               <div className={`w-8 h-8 ${action.iconColor} rounded-lg flex items-center justify-center`}>
                 <action.icon className="h-4 w-4 text-white" />
