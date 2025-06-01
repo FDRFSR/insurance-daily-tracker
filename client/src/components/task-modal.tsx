@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { X } from "lucide-react";
+import { X, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,8 @@ interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   task?: Task | null;
+  preselectedCategory?: string;
+  preselectedDate?: string;
 }
 
 interface TaskFormData {
@@ -27,7 +29,22 @@ interface TaskFormData {
   dueTime: string;
 }
 
-export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
+// Mapping delle categorie per pre-riempire i titoli
+const categoryTitles: Record<string, string> = {
+  calls: "Chiamata cliente - ",
+  quotes: "Preventivo per ",
+  claims: "Gestione sinistro - ",
+  documents: "Documentazione - ",
+  appointments: "Appuntamento con "
+};
+
+export default function TaskModal({ 
+  isOpen, 
+  onClose, 
+  task, 
+  preselectedCategory, 
+  preselectedDate 
+}: TaskModalProps) {
   const [formData, setFormData] = useState<TaskFormData>({
     title: "",
     description: "",
@@ -43,6 +60,7 @@ export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
 
   useEffect(() => {
     if (task) {
+      // Editing existing task
       setFormData({
         title: task.title,
         description: task.description || "",
@@ -52,7 +70,19 @@ export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
         dueDate: task.dueDate || "",
         dueTime: task.dueTime || "",
       });
+    } else if (preselectedCategory || preselectedDate) {
+      // New task with preselected data
+      setFormData({
+        title: preselectedCategory ? (categoryTitles[preselectedCategory] || "") : "",
+        description: "",
+        category: preselectedCategory || "",
+        client: "",
+        priority: "medium",
+        dueDate: preselectedDate || "",
+        dueTime: "",
+      });
     } else {
+      // New task from scratch
       setFormData({
         title: "",
         description: "",
@@ -63,7 +93,7 @@ export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
         dueTime: "",
       });
     }
-  }, [task, isOpen]);
+  }, [task, preselectedCategory, preselectedDate, isOpen]);
 
   const createTaskMutation = useMutation({
     mutationFn: async (data: TaskFormData) => {
@@ -134,13 +164,67 @@ export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
 
   const isLoading = createTaskMutation.isPending || updateTaskMutation.isPending;
 
+  const getModalTitle = () => {
+    if (task) return "Modifica Attività";
+    
+    if (preselectedCategory) {
+      const categoryNames = {
+        calls: "Nuova Chiamata Cliente",
+        quotes: "Nuovo Preventivo",
+        claims: "Nuovo Sinistro",
+        documents: "Nuova Documentazione",
+        appointments: "Nuovo Appuntamento"
+      };
+      return categoryNames[preselectedCategory as keyof typeof categoryNames] || "Nuova Attività";
+    }
+    
+    if (preselectedDate) {
+      const dateObj = new Date(preselectedDate);
+      const formattedDate = dateObj.toLocaleDateString('it-IT', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long'
+      });
+      return `Nuova Attività - ${formattedDate}`;
+    }
+    
+    return "Nuova Attività";
+  };
+
+  const formatSelectedDate = () => {
+    if (!preselectedDate) return null;
+    const dateObj = new Date(preselectedDate);
+    return dateObj.toLocaleDateString('it-IT', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {task ? "Modifica Attività" : "Nuova Attività"}
+          <DialogTitle className="flex items-center gap-2">
+            {getModalTitle()}
+            {preselectedCategory && (
+              <span className="text-sm font-normal text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                Azione Rapida
+              </span>
+            )}
+            {preselectedDate && (
+              <span className="text-sm font-normal text-green-600 bg-green-50 px-2 py-1 rounded flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                Dal Calendario
+              </span>
+            )}
           </DialogTitle>
+          {preselectedDate && (
+            <p className="text-sm text-gray-600 mt-1">
+              Attività programmata per {formatSelectedDate()}
+            </p>
+          )}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -152,12 +236,17 @@ export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               onChange={(e) => handleInputChange("title", e.target.value)}
               placeholder="Inserisci il titolo dell'attività..."
               required
+              autoFocus={!preselectedCategory && !preselectedDate}
             />
           </div>
 
           <div>
             <Label htmlFor="category">Categoria *</Label>
-            <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+            <Select 
+              value={formData.category} 
+              onValueChange={(value) => handleInputChange("category", value)}
+              disabled={!!preselectedCategory}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Seleziona categoria" />
               </SelectTrigger>
@@ -169,6 +258,11 @@ export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                 <SelectItem value="appointments">Appuntamento</SelectItem>
               </SelectContent>
             </Select>
+            {preselectedCategory && (
+              <p className="text-xs text-gray-500 mt-1">
+                Categoria preselezionata dall'azione rapida
+              </p>
+            )}
           </div>
 
           <div>
@@ -178,6 +272,7 @@ export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               value={formData.client}
               onChange={(e) => handleInputChange("client", e.target.value)}
               placeholder="Nome del cliente..."
+              autoFocus={!!preselectedCategory || !!preselectedDate}
             />
           </div>
 
@@ -200,7 +295,13 @@ export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                 type="date"
                 value={formData.dueDate}
                 onChange={(e) => handleInputChange("dueDate", e.target.value)}
+                className={preselectedDate ? "ring-2 ring-green-200" : ""}
               />
+              {preselectedDate && (
+                <p className="text-xs text-green-600 mt-1">
+                  Data preselezionata dal calendario
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="dueTime">Ora</Label>

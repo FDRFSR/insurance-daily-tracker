@@ -11,6 +11,7 @@ import type { Task } from "@shared/schema";
 export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const handleTaskEdit = (task: Task) => {
     setEditingTask(task);
@@ -22,6 +23,10 @@ export default function Dashboard() {
     setIsModalOpen(true);
   };
 
+  const handleDateSelect = (date: string | null) => {
+    setSelectedDate(date);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -30,8 +35,14 @@ export default function Dashboard() {
         <DashboardStats />
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <TaskList onTaskEdit={handleTaskEdit} />
-          <Sidebar />
+          <TaskList 
+            onTaskEdit={handleTaskEdit} 
+            selectedDate={selectedDate}
+          />
+          <Sidebar 
+            onDateSelect={handleDateSelect}
+            selectedDate={selectedDate}
+          />
         </div>
       </div>
 

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, Phone, Calculator, FileText, Folder, Calendar, Edit2, Trash2 } from "lucide-react";
+import { Search, Plus, Phone, Calculator, FileText, Folder, Calendar, Edit2, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,10 +33,10 @@ const statusLabels = {
 
 interface TaskListProps {
   onTaskEdit?: (task: Task) => void;
+  selectedDate?: string | null;
 }
 
-export default function TaskList({ onTaskEdit }: TaskListProps) {
-  const [filters, setFilters] = useState<TaskFilters>({});
+export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,15 +45,29 @@ export default function TaskList({ onTaskEdit }: TaskListProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Build query parameters
-  const queryParams = new URLSearchParams();
-  if (filters.category && filters.category !== "all") queryParams.append("category", filters.category);
-  if (filters.status && filters.status !== "all") queryParams.append("status", filters.status);
-  if (filters.search) queryParams.append("search", filters.search);
+  // Build query parameters basati direttamente sugli stati
+  const queryParams = useMemo(() => {
+    const params = new URLSearchParams();
+    if (selectedCategory && selectedCategory !== "all") params.append("category", selectedCategory);
+    if (searchQuery) params.append("search", searchQuery);
+    return params;
+  }, [selectedCategory, searchQuery]);
 
-  const { data: tasks = [], isLoading } = useQuery<Task[]>({
+  const { data: allTasks = [], isLoading } = useQuery<Task[]>({
     queryKey: ["/api/tasks", queryParams.toString()],
   });
+
+  // Filtra le task in base alla data selezionata (applicato sui risultati già filtrati)
+  const filteredTasks = useMemo(() => {
+    let tasks = allTasks;
+    
+    // Applica il filtro di data se presente
+    if (selectedDate) {
+      tasks = tasks.filter(task => task.dueDate === selectedDate);
+    }
+    
+    return tasks;
+  }, [allTasks, selectedDate]);
 
   const toggleTaskMutation = useMutation({
     mutationFn: async ({ id, completed }: { id: number; completed: boolean }) => {
@@ -98,15 +112,10 @@ export default function TaskList({ onTaskEdit }: TaskListProps) {
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    setFilters(prev => ({ ...prev, search: value || undefined }));
   };
 
   const handleCategoryFilter = (category: string) => {
     setSelectedCategory(category);
-    setFilters(prev => ({ 
-      ...prev, 
-      category: category === "all" ? undefined : category 
-    }));
   };
 
   const handleTaskToggle = (task: Task) => {
@@ -163,6 +172,22 @@ export default function TaskList({ onTaskEdit }: TaskListProps) {
     { key: "appointments", label: "Appuntamenti", icon: Calendar }
   ];
 
+  // Determina il titolo in base ai filtri attivi
+  const getListTitle = () => {
+    if (selectedDate) {
+      const dateObj = new Date(selectedDate + 'T00:00:00');
+      const today = new Date();
+      const isToday = selectedDate === today.toISOString().split('T')[0];
+      
+      if (isToday) {
+        return "Attività di Oggi";
+      } else {
+        return `Attività del ${dateObj.toLocaleDateString('it-IT')}`;
+      }
+    }
+    return "Attività di Oggi";
+  };
+
   if (isLoading) {
     return (
       <div className="lg:col-span-2">
@@ -195,7 +220,14 @@ export default function TaskList({ onTaskEdit }: TaskListProps) {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Attività di Oggi</h2>
+              <div className="flex items-center space-x-2">
+                <h2 className="text-lg font-semibold text-gray-900">{getListTitle()}</h2>
+                {selectedDate && (
+                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                    Filtrato per data
+                  </span>
+                )}
+              </div>
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -232,12 +264,22 @@ export default function TaskList({ onTaskEdit }: TaskListProps) {
           </div>
 
           <div className="p-6 space-y-4">
-            {tasks.length === 0 ? (
+            {filteredTasks.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">Nessuna attività trovata</p>
+                {selectedDate ? (
+                  <div>
+                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Nessuna attività trovata per questa data</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Prova a selezionare un'altra data o rimuovi il filtro
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-gray-500">Nessuna attività trovata</p>
+                )}
               </div>
             ) : (
-              tasks.map((task) => {
+              filteredTasks.map((task) => {
                 const IconComponent = categoryIcons[task.category as keyof typeof categoryIcons];
                 const isOverdue = task.status === "overdue";
                 

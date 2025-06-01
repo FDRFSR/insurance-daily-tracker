@@ -2,18 +2,100 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Phone, Calculator, FileText, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function Sidebar() {
-  const [currentMonth, setCurrentMonth] = useState("Gennaio 2024");
+interface SidebarProps {
+  onDateSelect?: (date: string | null) => void;
+  selectedDate?: string | null;
+}
+
+export default function Sidebar({ onDateSelect, selectedDate }: SidebarProps) {
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const handlePreviousMonth = () => {
-    // Month navigation logic would go here
-    console.log("Previous month");
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() - 1);
+      return newDate;
+    });
   };
 
   const handleNextMonth = () => {
-    // Month navigation logic would go here
-    console.log("Next month");
+    setCurrentDate(prev => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + 1);
+      return newDate;
+    });
   };
+
+  const monthNames = [
+    "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
+    "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
+  ];
+
+  const currentMonthName = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+
+  const handleDateClick = (day: number, isCurrentMonth: boolean) => {
+    if (!isCurrentMonth) return;
+    
+    // Costruisci la data nel formato YYYY-MM-DD
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1; // getMonth() ritorna 0-11
+    const clickedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    
+    // Se clicchiamo sulla stessa data, la deseleziona
+    if (onDateSelect) {
+      onDateSelect(clickedDate === selectedDate ? null : clickedDate);
+    }
+  };
+
+  const isDateSelected = (day: number, isCurrentMonth: boolean) => {
+    if (!isCurrentMonth || !selectedDate) return false;
+    
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1;
+    const dateToCheck = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    
+    return selectedDate === dateToCheck;
+  };
+
+  // Genera dinamicamente i giorni del calendario
+  const generateCalendarDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    // Primo giorno del mese
+    const firstDay = new Date(year, month, 1);
+    // Ultimo giorno del mese
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Trova il lunedì della settimana del primo giorno (1 = lunedì, 0 = domenica)
+    const startDate = new Date(firstDay);
+    const dayOfWeek = (firstDay.getDay() + 6) % 7; // Converti domenica=0 a domenica=6
+    startDate.setDate(firstDay.getDate() - dayOfWeek);
+    
+    const days = [];
+    const today = new Date();
+    const currentDay = new Date(startDate);
+    
+    // Genera 42 giorni (6 settimane x 7 giorni)
+    for (let i = 0; i < 42; i++) {
+      const isCurrentMonth = currentDay.getMonth() === month;
+      const isToday = currentDay.toDateString() === today.toDateString();
+      
+      days.push({
+        day: currentDay.getDate(),
+        isCurrentMonth,
+        isToday,
+        hasEvent: false, // Qui potresti aggiungere logica per eventi reali
+        isOverdue: false
+      });
+      
+      currentDay.setDate(currentDay.getDate() + 1);
+    }
+    
+    return days;
+  };
+
+  const calendarDays = generateCalendarDays();
 
   const quickActions = [
     {
@@ -67,49 +149,30 @@ export default function Sidebar() {
     }
   ];
 
-  // Calendar days - simplified static calendar
-  const calendarDays = [
-    { day: "29", isCurrentMonth: false },
-    { day: "30", isCurrentMonth: false },
-    { day: "31", isCurrentMonth: false },
-    { day: "1", isCurrentMonth: true },
-    { day: "2", isCurrentMonth: true },
-    { day: "3", isCurrentMonth: true },
-    { day: "4", isCurrentMonth: true },
-    { day: "5", isCurrentMonth: true },
-    { day: "6", isCurrentMonth: true },
-    { day: "7", isCurrentMonth: true },
-    { day: "8", isCurrentMonth: true },
-    { day: "9", isCurrentMonth: true },
-    { day: "10", isCurrentMonth: true },
-    { day: "11", isCurrentMonth: true },
-    { day: "12", isCurrentMonth: true },
-    { day: "13", isCurrentMonth: true },
-    { day: "14", isCurrentMonth: true },
-    { day: "15", isCurrentMonth: true, isToday: true },
-    { day: "16", isCurrentMonth: true, hasEvent: true },
-    { day: "17", isCurrentMonth: true },
-    { day: "18", isCurrentMonth: true },
-    { day: "19", isCurrentMonth: true, hasEvent: true, isOverdue: true },
-    { day: "20", isCurrentMonth: true },
-    { day: "21", isCurrentMonth: true },
-    { day: "22", isCurrentMonth: true },
-    { day: "23", isCurrentMonth: true },
-    { day: "24", isCurrentMonth: true },
-    { day: "25", isCurrentMonth: true }
-  ];
-
   return (
     <div className="space-y-6">
       {/* Calendar Widget */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Calendario</h3>
+        {selectedDate && (
+          <div className="mb-3 p-2 bg-blue-50 rounded-md">
+            <p className="text-sm text-blue-800">
+              📅 Filtrando per: {new Date(selectedDate + 'T00:00:00').toLocaleDateString('it-IT')}
+            </p>
+            <button 
+              onClick={() => onDateSelect?.(null)}
+              className="text-xs text-blue-600 hover:text-blue-800 underline"
+            >
+              Rimuovi filtro
+            </button>
+          </div>
+        )}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <Button variant="ghost" size="sm" onClick={handlePreviousMonth}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <h4 className="font-medium text-gray-900">{currentMonth}</h4>
+            <h4 className="font-medium text-gray-900">{currentMonthName}</h4>
             <Button variant="ghost" size="sm" onClick={handleNextMonth}>
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -123,9 +186,12 @@ export default function Sidebar() {
             {calendarDays.map((date, index) => (
               <div
                 key={index}
-                className={`p-2 text-center cursor-pointer relative ${
+                onClick={() => handleDateClick(date.day, date.isCurrentMonth)}
+                className={`p-2 text-center cursor-pointer relative transition-colors ${
                   date.isToday
                     ? "bg-blue-600 text-white rounded font-medium"
+                    : isDateSelected(date.day, date.isCurrentMonth)
+                    ? "bg-blue-100 text-blue-800 rounded font-medium"
                     : date.isCurrentMonth
                     ? "text-gray-900 hover:bg-gray-100 rounded"
                     : "text-gray-400"
