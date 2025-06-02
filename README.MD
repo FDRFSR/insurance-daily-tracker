@@ -20,6 +20,18 @@ InsuraTask è una soluzione completa per agenti assicurativi che vogliono ottimi
 - **Ridurre** le attività perse o dimenticate
 - **Fornire** una panoramica chiara delle priorità quotidiane
 
+## 📸 Screenshots
+
+### 🏠 Dashboard Principale
+![Dashboard Overview](screenshots/dashboard-overview.png)
+*Vista principale con statistiche, lista attività e calendario integrato*
+
+### 📋 Gestione Attività
+![Task Management](screenshots/task-management.png)
+*Lista attività con filtri, ricerca e azioni rapide*
+
+---
+
 ## ✨ Funzionalità Principali
 
 ### 📊 Dashboard Intelligente
@@ -326,6 +338,48 @@ Questo progetto è rilasciato sotto licenza **MIT**. Vedi il file [LICENSE](LICE
 - 🌐 **LinkedIn**: [federico-fusarri](https://linkedin.com/in/federico-fusarri)
 - 🐙 **GitHub**: [FDRFSR](https://github.com/FDRFSR)
 - 📧 **Email**: [iscrizioni.fusarri at gmail.com](mailto:iscrizioni.fusarri at gmail.com)
+
+---
+
+## 📸 Come Aggiornare gli Screenshots
+
+Per mantenere gli screenshot aggiornati, segui questi passaggi:
+
+### Setup per Screenshots
+```bash
+# 1. Avvia l'applicazione in modalità development
+npm run dev
+
+# 2. Apri http://localhost:5000 nel browser
+# 3. Assicurati che ci siano dati di test nel database
+```
+
+### Screenshots da Catturare
+
+1. **dashboard-overview.png** (1920x1080)
+   - Vista completa della dashboard
+   - Statistiche visibili in alto
+   - Task list a sinistra, sidebar a destra
+   - Alcune attività di esempio presenti
+
+2. **task-management.png** (1200x800)
+   - Focus sulla sezione task list
+   - Filtri categoria visibili
+   - Alcune attività con stati diversi (pending, completed, overdue)
+   - Barra di ricerca con testo di esempio
+
+### Tools Consigliati
+- **macOS**: Cmd+Shift+4 per screenshot area
+- **Windows**: Windows+Shift+S per Snipping Tool
+- **Browser DevTools**: F12 > Device Toolbar per mobile simulation
+- **Lightshot** o **CleanShot X** per editing avanzato
+
+### Naming Convention
+```
+screenshots/
+├── dashboard-overview.png
+└── task-management.png
+```
 
 ---
 
