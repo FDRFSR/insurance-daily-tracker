@@ -1,0 +1,6 @@
+node_modules/
+dist-electron/
+pkg-dist/
+dist/
+*.db
+*.log

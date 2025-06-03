@@ -1,0 +1,329 @@
+name: 🚀 Build and Release InsuraTask
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggerato sui tag versioni (es: v1.0.0)
+  workflow_dispatch:  # Permette esecuzione manuale
+    inputs:
+      version:
+        description: 'Version to release (es: 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+env:
+  NODE_VERSION: '18'
+  PRODUCT_NAME: 'InsuraTask'
+
+jobs:
+  # Job per preparare le informazioni di build
+  prepare:
+    name: 📋 Prepare Build Info
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Extract version info
+      id: version
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          VERSION="${{ github.event.inputs.version }}"
+          TAG="v${VERSION}"
+        else
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+        fi
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "tag=${TAG}" >> $GITHUB_OUTPUT
+        echo "🏷️ Building version: ${VERSION} (tag: ${TAG})"
+
+  # Job principale per build multipiattaforma
+  build:
+    name: 🔨 Build ${{ matrix.os }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            artifact_suffix: linux-x64
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            artifact_suffix: win-x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            artifact_suffix: macos-x64
+    
+    steps:
+    - name: 📂 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    # 🔧 Gestisci problemi package-lock.json
+    - name: 🔧 Handle package-lock issues
+      run: |
+        echo "Installing dependencies..."
+        
+        # Prova npm ci, se fallisce usa npm install
+        if ! npm ci --prefer-offline --no-audit; then
+          echo "⚠️ npm ci failed, falling back to npm install"
+          rm -rf node_modules package-lock.json || true
+          npm install --no-audit
+          echo "✅ Generated new package-lock.json"
+        else
+          echo "✅ npm ci succeeded"
+        fi
+      shell: bash
+
+    - name: 🔍 Type check
+      run: npm run check
+
+    - name: 🏗️ Build application
+      run: npm run build
+      env:
+        CI: true
+
+    # 🖥️ Build Electron (senza icone)
+    - name: 🖥️ Build Electron app
+      run: npm run electron:dist
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ELECTRON_CACHE: .cache/electron
+        ELECTRON_BUILDER_CACHE: .cache/electron-builder
+        # Disabilita code signing e icone
+        CSC_IDENTITY_AUTO_DISCOVERY: false
+        DEBUG: electron-builder
+
+    # ⚡ Build pkg (binari standalone)
+    - name: ⚡ Build standalone binary
+      run: |
+        echo "Building standalone binary for ${{ matrix.platform }}..."
+        mkdir -p pkg-dist
+        
+        if [[ "${{ matrix.platform }}" == "win32" ]]; then
+          npm run pkg:win
+        elif [[ "${{ matrix.platform }}" == "darwin" ]]; then
+          npm run pkg:mac  
+        else
+          npm run pkg:linux
+        fi
+        
+        echo "✅ Standalone binary build completed"
+      shell: bash
+      continue-on-error: true
+
+    # 📋 Elenca file generati per debug
+    - name: 📋 List generated files
+      run: |
+        echo "=== Build output summary ==="
+        echo "Working directory: $(pwd)"
+        
+        if [ -d "dist-electron" ]; then
+          echo "📦 Electron build output:"
+          find dist-electron -type f -name "*" | head -10
+          du -sh dist-electron/* 2>/dev/null || echo "No files found"
+        else
+          echo "❌ No dist-electron directory found"
+        fi
+        
+        if [ -d "pkg-dist" ]; then
+          echo "⚡ PKG build output:" 
+          find pkg-dist -type f -name "*" | head -10
+          du -sh pkg-dist/* 2>/dev/null || echo "No files found"
+        else
+          echo "❌ No pkg-dist directory found"
+        fi
+      shell: bash
+
+    # 📝 Rinomina file con pattern consistente
+    - name: 📝 Rename artifacts
+      run: |
+        echo "Renaming artifacts for consistency..."
+        
+        # Rinomina file Electron
+        if [ -d "dist-electron" ]; then
+          cd dist-electron
+          for file in *.*; do
+            if [[ -f "$file" && "$file" != *.yml && "$file" != *.yaml ]]; then
+              extension="${file##*.}"
+              new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-${{ matrix.artifact_suffix }}.${extension}"
+              if [[ "$file" != "$new_name" ]]; then
+                mv "$file" "$new_name"
+                echo "Renamed: $file -> $new_name"
+              fi
+            fi
+          done
+          cd ..
+        fi
+        
+        # Rinomina binari PKG
+        if [ -d "pkg-dist" ]; then
+          cd pkg-dist
+          for file in *; do
+            if [[ -f "$file" ]]; then
+              extension=""
+              [[ "$file" == *.* ]] && extension=".${file##*.}"
+              new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-${{ matrix.artifact_suffix }}-standalone${extension}"
+              if [[ "$file" != "$new_name" ]]; then
+                mv "$file" "$new_name"
+                echo "Renamed: $file -> $new_name"
+              fi
+            fi
+          done
+          cd ..
+        fi
+      shell: bash
+      continue-on-error: true
+
+    # 📤 Upload Electron artifacts
+    - name: 📤 Upload Electron artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: electron-${{ matrix.artifact_suffix }}
+        path: dist-electron/*
+        retention-days: 30
+        if-no-files-found: warn
+
+    # 📤 Upload PKG artifacts  
+    - name: 📤 Upload PKG artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: pkg-${{ matrix.artifact_suffix }}
+        path: pkg-dist/*
+        retention-days: 30
+        if-no-files-found: ignore
+
+  # Job per creare la release GitHub
+  release:
+    name: 🎉 Create GitHub Release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+    - name: 📂 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # 📥 Download tutti gli artifacts
+    - name: 📥 Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release-assets
+
+    # 📁 Organizza i file per la release
+    - name: 📁 Organize release files
+      run: |
+        mkdir -p final-release
+        
+        echo "=== Organizing release files ==="
+        
+        # Trova e sposta tutti gli eseguibili
+        find release-assets -type f \( \
+          -name "*.exe" -o \
+          -name "*.msi" -o \
+          -name "*.dmg" -o \
+          -name "*.pkg" -o \
+          -name "*.AppImage" -o \
+          -name "*.deb" -o \
+          -name "*.rpm" -o \
+          -name "*.tar.gz" -o \
+          -name "*.zip" -o \
+          -name "*-standalone*" \
+        \) -exec cp {} final-release/ \;
+        
+        echo "=== Files prepared for release ==="
+        ls -la final-release/ || echo "No files found"
+        
+        if [ "$(ls -A final-release/)" ]; then
+          echo "=== File sizes ==="
+          du -sh final-release/*
+        else
+          echo "⚠️ No files found for release"
+        fi
+
+    # 📝 Genera changelog
+    - name: 📝 Generate changelog
+      id: changelog
+      run: |
+        echo "## 🚀 InsuraTask v${{ needs.prepare.outputs.version }}" > CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 📦 Download" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "Download the executable for your platform:" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "| Platform | Type | File |" >> CHANGELOG.md
+        echo "|----------|------|------|" >> CHANGELOG.md
+        echo "| 🪟 Windows | Portable App | \`InsuraTask-${{ needs.prepare.outputs.version }}-win-x64.exe\` |" >> CHANGELOG.md
+        echo "| 🪟 Windows | Standalone | \`InsuraTask-${{ needs.prepare.outputs.version }}-win-x64-standalone.exe\` |" >> CHANGELOG.md
+        echo "| 🍎 macOS | DMG Installer | \`InsuraTask-${{ needs.prepare.outputs.version }}-macos-x64.dmg\` |" >> CHANGELOG.md
+        echo "| 🍎 macOS | Standalone | \`InsuraTask-${{ needs.prepare.outputs.version }}-macos-x64-standalone\` |" >> CHANGELOG.md
+        echo "| 🐧 Linux | AppImage | \`InsuraTask-${{ needs.prepare.outputs.version }}-linux-x64.AppImage\` |" >> CHANGELOG.md
+        echo "| 🐧 Linux | Standalone | \`InsuraTask-${{ needs.prepare.outputs.version }}-linux-x64-standalone\` |" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 🚀 Quick Start" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "1. **Download** the file for your operating system" >> CHANGELOG.md
+        echo "2. **Run** the executable directly (no installation required for standalone versions)" >> CHANGELOG.md
+        echo "3. **Enjoy** managing your insurance tasks!" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 📋 System Requirements" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "- **Windows**: Windows 10+ (64-bit)" >> CHANGELOG.md
+        echo "- **macOS**: macOS 10.15+ (Catalina)" >> CHANGELOG.md
+        echo "- **Linux**: Ubuntu 18.04+ / equivalent" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 🐛 Issues?" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "Report bugs at: https://github.com/FDRFSR/insuratask/issues" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "---" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "*Built with ❤️ by [Federico Fusarri](https://github.com/FDRFSR)*" >> CHANGELOG.md
+        
+        # Output per GitHub
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat CHANGELOG.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    # 🎉 Crea la release GitHub
+    - name: 🎉 Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.prepare.outputs.tag }}
+        name: "🛡️ InsuraTask v${{ needs.prepare.outputs.version }}"
+        body: ${{ steps.changelog.outputs.changelog }}
+        files: final-release/*
+        draft: false
+        prerelease: false
+        make_latest: true
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # ✅ Notifica successo
+    - name: ✅ Release completed
+      run: |
+        echo "🎉 Release v${{ needs.prepare.outputs.version }} created successfully!"
+        echo ""
+        echo "📦 Files released:"
+        ls -la final-release/ || echo "No files found"
+        echo ""
+        echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ needs.prepare.outputs.tag }}"
