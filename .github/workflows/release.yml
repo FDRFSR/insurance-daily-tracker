@@ -1,0 +1,357 @@
+name: 🚀 Build and Release InsuraTask
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggerato sui tag versioni (es: v1.0.0)
+  workflow_dispatch:  # Permette esecuzione manuale
+    inputs:
+      version:
+        description: 'Version to release (es: 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+env:
+  NODE_VERSION: '18'
+  PRODUCT_NAME: 'InsuraTask'
+
+jobs:
+  # Job per preparare le informazioni di build
+  prepare:
+    name: 📋 Prepare Build Info
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Extract version info
+      id: version
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          VERSION="${{ github.event.inputs.version }}"
+          TAG="v${VERSION}"
+        else
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+        fi
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "tag=${TAG}" >> $GITHUB_OUTPUT
+        echo "🏷️ Building version: ${VERSION} (tag: ${TAG})"
+
+  # Job principale per build multipiattaforma
+  build:
+    name: 🔨 Build ${{ matrix.os }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            electron_target: linux
+            pkg_target: node18-linux-x64
+            artifact_suffix: linux-x64
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            electron_target: win32
+            pkg_target: node18-win-x64
+            artifact_suffix: win-x64
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+            electron_target: darwin
+            pkg_target: node18-macos-x64
+            artifact_suffix: macos-x64
+    
+    steps:
+    - name: 📂 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🟢 Setup Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: 📦 Install dependencies
+      run: npm ci
+
+    - name: 🔍 Type check
+      run: npm run check
+
+    - name: 🏗️ Build application
+      run: npm run build
+      env:
+        CI: true
+
+    # Prepara icone e asset per Electron
+    - name: 🎨 Prepare Electron assets
+      run: |
+        mkdir -p electron/assets
+        
+        # Crea icone placeholder se non esistono
+        if [ ! -f "electron/assets/icon.png" ]; then
+          echo "Creating placeholder icons..."
+          # Per ora creiamo file vuoti, in produzione dovresti usare icone vere
+          touch electron/assets/icon.png
+          touch electron/assets/icon.ico
+          touch electron/assets/icon.icns
+        fi
+      shell: bash
+
+    # Build Electron
+    - name: 🖥️ Build Electron app
+      run: npm run electron:dist
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ELECTRON_CACHE: .cache/electron
+        ELECTRON_BUILDER_CACHE: .cache/electron-builder
+        # Disabilita code signing per ora
+        CSC_IDENTITY_AUTO_DISCOVERY: false
+
+    # Build pkg (binari standalone)
+    - name: ⚡ Build standalone binary
+      run: |
+        mkdir -p pkg-dist
+        npm run pkg:${{ matrix.platform == 'win32' && 'win' || matrix.platform == 'darwin' && 'mac' || 'linux' }}
+      continue-on-error: true  # pkg può fallire su alcune piattaforme
+
+    # Elenca file generati per debug
+    - name: 📋 List generated files
+      run: |
+        echo "=== Electron build output ==="
+        if [ -d "dist-electron" ]; then
+          find dist-electron -type f -name "*" | head -20
+          du -sh dist-electron/* 2>/dev/null || echo "No Electron files found"
+        else
+          echo "No dist-electron directory found"
+        fi
+        
+        echo -e "\n=== PKG build output ==="
+        if [ -d "pkg-dist" ]; then
+          find pkg-dist -type f -name "*" | head -20
+          du -sh pkg-dist/* 2>/dev/null || echo "No PKG files found"
+        else
+          echo "No pkg-dist directory found"
+        fi
+      shell: bash
+
+    # Rinomina file per clarity
+    - name: 📝 Rename artifacts
+      run: |
+        cd dist-electron
+        
+        # Rinomina file Electron con pattern consistente
+        for file in *.*; do
+          if [[ -f "$file" ]]; then
+            extension="${file##*.}"
+            new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-${{ matrix.artifact_suffix }}.${extension}"
+            mv "$file" "$new_name"
+            echo "Renamed: $file -> $new_name"
+          fi
+        done
+        
+        cd ../pkg-dist
+        
+        # Rinomina binari PKG
+        for file in *; do
+          if [[ -f "$file" ]]; then
+            extension=""
+            [[ "$file" == *.* ]] && extension=".${file##*.}"
+            new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-${{ matrix.artifact_suffix }}-standalone${extension}"
+            mv "$file" "$new_name"
+            echo "Renamed: $file -> $new_name"
+          fi
+        done
+      shell: bash
+      continue-on-error: true
+
+    # Upload Electron artifacts
+    - name: 📤 Upload Electron artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: electron-${{ matrix.artifact_suffix }}
+        path: dist-electron/*
+        retention-days: 30
+        if-no-files-found: warn
+
+    # Upload PKG artifacts
+    - name: 📤 Upload PKG artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: pkg-${{ matrix.artifact_suffix }}
+        path: pkg-dist/*
+        retention-days: 30
+        if-no-files-found: ignore
+
+  # Job per creare la release GitHub
+  release:
+    name: 🎉 Create GitHub Release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+    - name: 📂 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for changelog
+
+    # Download tutti gli artifacts
+    - name: 📥 Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: release-assets
+
+    # Organizza i file per la release
+    - name: 📁 Organize release files
+      run: |
+        mkdir -p final-release
+        
+        echo "=== Organizing release files ==="
+        
+        # Sposta tutti i file nella directory finale
+        find release-assets -type f \( \
+          -name "*.exe" -o \
+          -name "*.msi" -o \
+          -name "*.dmg" -o \
+          -name "*.pkg" -o \
+          -name "*.AppImage" -o \
+          -name "*.deb" -o \
+          -name "*.rpm" -o \
+          -name "*.tar.gz" -o \
+          -name "*-standalone*" \
+        \) -exec cp {} final-release/ \;
+        
+        echo "=== Files to release ==="
+        ls -la final-release/
+        
+        echo "=== File sizes ==="
+        du -sh final-release/*
+
+    # Genera changelog automatico
+    - name: 📝 Generate changelog
+      id: changelog
+      run: |
+        echo "## 🚀 InsuraTask v${{ needs.prepare.outputs.version }}" > CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 📦 Download" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "| Platform | Electron App | Standalone Binary |" >> CHANGELOG.md
+        echo "|----------|--------------|-------------------|" >> CHANGELOG.md
+        echo "| 🪟 Windows | \`InsuraTask-${{ needs.prepare.outputs.version }}-win-x64.exe\` | \`InsuraTask-${{ needs.prepare.outputs.version }}-win-x64-standalone.exe\` |" >> CHANGELOG.md
+        echo "| 🍎 macOS | \`InsuraTask-${{ needs.prepare.outputs.version }}-macos-x64.dmg\` | \`InsuraTask-${{ needs.prepare.outputs.version }}-macos-x64-standalone\` |" >> CHANGELOG.md
+        echo "| 🐧 Linux | \`InsuraTask-${{ needs.prepare.outputs.version }}-linux-x64.AppImage\` | \`InsuraTask-${{ needs.prepare.outputs.version }}-linux-x64-standalone\` |" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        
+        # Aggiungi commit recenti se è un workflow manuale
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "### 🔄 Recent Changes" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          git log --oneline -10 --pretty=format:"- %s" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+        fi
+        
+        echo "" >> CHANGELOG.md
+        echo "### 📋 System Requirements" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "- **Windows**: Windows 10+ (64-bit)" >> CHANGELOG.md
+        echo "- **macOS**: macOS 10.15+ (Catalina)" >> CHANGELOG.md
+        echo "- **Linux**: Ubuntu 18.04+ / equivalent" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 🛠️ Installation" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "1. **Electron App**: Download and run the installer for your platform" >> CHANGELOG.md
+        echo "2. **Standalone**: Download the binary and run directly (no installation required)" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "---" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "*Built with ❤️ by [Federico Fusarri](https://github.com/FDRFSR)*" >> CHANGELOG.md
+        
+        # Output per GitHub
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat CHANGELOG.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    # Crea la release GitHub
+    - name: 🎉 Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ needs.prepare.outputs.tag }}
+        name: "🛡️ InsuraTask v${{ needs.prepare.outputs.version }}"
+        body: ${{ steps.changelog.outputs.changelog }}
+        files: final-release/*
+        draft: false
+        prerelease: false
+        make_latest: true
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # Notifica successo
+    - name: ✅ Release completed
+      run: |
+        echo "🎉 Release v${{ needs.prepare.outputs.version }} created successfully!"
+        echo "📦 Files released:"
+        ls -la final-release/
+        echo ""
+        echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ needs.prepare.outputs.tag }}"
+
+  # Job opzionale per Docker (solo su tag)
+  docker:
+    name: 🐳 Build Docker Image
+    needs: prepare
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: 📂 Checkout repository
+      uses: actions/checkout@v4
+
+    - name: 🔧 Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: 🔐 Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 🏷️ Extract Docker metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=raw,value=latest
+
+    - name: 🐳 Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          VERSION=${{ needs.prepare.outputs.version }}
+
+    - name: 🐳 Docker build completed
+      run: |
+        echo "🐳 Docker image built and pushed successfully!"
+        echo "📦 Image tags:"
+        echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /'
