@@ -1,6 +1,6 @@
 {
   "name": "insuratask",
-  "version": "1.0.0",
+  "version": "1.0.9",
   "type": "module",
   "license": "MIT",
   "description": "Gestione attività per agenti assicurativi",
@@ -122,6 +122,7 @@
       "dist/**/*",
       "electron/**/*",
       "package.json",
+      "node_modules/express/**/*",
       {
         "from": "node_modules/better-sqlite3",
         "to": "node_modules/better-sqlite3",
@@ -130,21 +131,30 @@
         ]
       }
     ],
-    "mac": {
-      "category": "public.app-category.business",
+    "extraResources": [
+      {
+        "from": "dist/public",
+        "to": "static",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
       "target": [
         {
-          "target": "dmg",
+          "target": "portable",
           "arch": [
             "x64"
           ]
         }
       ]
     },
-    "win": {
+    "mac": {
+      "category": "public.app-category.business",
       "target": [
         {
-          "target": "portable",
+          "target": "dmg",
           "arch": [
             "x64"
           ]

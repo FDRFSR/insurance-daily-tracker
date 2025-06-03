@@ -1,97 +1,168 @@
-const { app, BrowserWindow, Menu, shell, dialog, protocol } = require('electron');
+const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const express = require('express');
+
+// 🔧 LOGGING POTENZIATO per debug crash
+const log = (message) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${message}`);
+  
+  // Su Windows, scrivi anche in un file log per debug
+  if (process.platform === 'win32') {
+    try {
+      const logPath = path.join(process.cwd(), 'insuratask-debug.log');
+      fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
+    } catch (e) {
+      // Ignora errori di scrittura log
+    }
+  }
+};
 
 // Configurazione app
 const isDevelopment = process.env.NODE_ENV === 'development' || !app.isPackaged;
-const DEV_PORT = 5000; // Porta per development server esterno
+const DEV_PORT = 5000;
 
 // Variabili globali
 let mainWindow = null;
 let localServer = null;
 
-console.log(`[Electron] Mode: ${isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'}`);
-console.log(`[Electron] isPackaged: ${app.isPackaged}`);
+log(`[Electron] Mode: ${isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'}`);
+log(`[Electron] isPackaged: ${app.isPackaged}`);
+log(`[Electron] Platform: ${process.platform}`);
+log(`[Electron] __dirname: ${__dirname}`);
+log(`[Electron] process.resourcesPath: ${process.resourcesPath}`);
+log(`[Electron] app.getAppPath(): ${app.getAppPath()}`);
 
-// 🎯 SOLUZIONE SEMPLICE: Server locale per production
+// 🎯 PERCORSI WINDOWS CORRETTI
+function findStaticFiles() {
+  const possiblePaths = [
+    // Development
+    path.join(__dirname, '..', 'dist', 'public'),
+    
+    // Production - extraResources
+    path.join(process.resourcesPath, 'static'),
+    
+    // Production - standard paths
+    path.join(process.resourcesPath, 'app', 'dist', 'public'),
+    path.join(app.getAppPath(), 'dist', 'public'),
+    path.join(__dirname, '..', 'dist', 'public'),
+    path.join(__dirname, 'dist', 'public'),
+    
+    // Electron Builder alternative
+    path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'public'),
+  ];
+
+  log('[Electron] Searching for static files...');
+  
+  for (const testPath of possiblePaths) {
+    log(`[Electron] Testing: ${testPath}`);
+    if (fs.existsSync(testPath)) {
+      const indexPath = path.join(testPath, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        log(`[Electron] ✅ Found static files at: ${testPath}`);
+        return testPath;
+      } else {
+        log(`[Electron] ⚠️ Directory exists but no index.html: ${testPath}`);
+      }
+    } else {
+      log(`[Electron] ❌ Path not found: ${testPath}`);
+    }
+  }
+  
+  log('[Electron] 🔍 Listing available directories...');
+  try {
+    if (fs.existsSync(process.resourcesPath)) {
+      const resourceFiles = fs.readdirSync(process.resourcesPath);
+      log(`[Electron] Resources directory contents: ${resourceFiles.join(', ')}`);
+    }
+    
+    const appFiles = fs.readdirSync(app.getAppPath());
+    log(`[Electron] App directory contents: ${appFiles.join(', ')}`);
+  } catch (e) {
+    log(`[Electron] Error listing directories: ${e.message}`);
+  }
+  
+  return null;
+}
+
+// 🚀 Server locale semplificato
 function createLocalServer() {
   return new Promise((resolve, reject) => {
-    // Trova percorso files statici
+    log('[Electron] Creating local server...');
+    
     let staticPath;
     
     if (isDevelopment) {
-      // In development: punta alla build locale
       staticPath = path.join(__dirname, '..', 'dist', 'public');
     } else {
-      // In production: prova diversi percorsi possibili
-      const possiblePaths = [
-        path.join(process.resourcesPath, 'app', 'dist', 'public'),  // Electron Builder standard
-        path.join(app.getAppPath(), 'dist', 'public'),              // Alternative
-        path.join(__dirname, '..', 'dist', 'public'),               // Fallback 1
-        path.join(__dirname, 'dist', 'public'),                     // Fallback 2
-      ];
-      
-      staticPath = possiblePaths.find(p => fs.existsSync(p));
-      
-      if (!staticPath) {
-        console.log('[Electron] Tried paths:', possiblePaths);
-        return reject(new Error(`Static files not found. Tried:\n${possiblePaths.join('\n')}\n\nRun 'npm run build' first.`));
-      }
+      staticPath = findStaticFiles();
     }
     
-    console.log(`[Electron] Static files path: ${staticPath}`);
-    
-    // Verifica che i files esistano
-    if (!fs.existsSync(staticPath)) {
-      return reject(new Error(`Static files not found at: ${staticPath}\n\nRun 'npm run build' first.`));
+    if (!staticPath || !fs.existsSync(staticPath)) {
+      const error = `Static files not found. Searched multiple locations but no valid path found.`;
+      log(`[Electron] ❌ ${error}`);
+      return reject(new Error(error));
     }
     
-    // Crea server Express locale
-    const app = express();
+    log(`[Electron] Using static path: ${staticPath}`);
     
-    // Serve file statici
-    app.use(express.static(staticPath));
-    
-    // API mock semplice per le statistiche (necessaria per il frontend)
-    app.get('/api/tasks/stats', (req, res) => {
-      res.json({
-        total: 0,
-        pending: 0,
-        completed: 0,
-        overdue: 0,
-        dueToday: 0
+    try {
+      // Importa express solo quando necessario
+      const express = require('express');
+      const app = express();
+      
+      log('[Electron] Express loaded successfully');
+      
+      // Serve file statici
+      app.use(express.static(staticPath));
+      log('[Electron] Static middleware configured');
+      
+      // API mock essenziali
+      app.get('/api/tasks/stats', (req, res) => {
+        log('[Electron] API call: /api/tasks/stats');
+        res.json({
+          total: 0,
+          pending: 0, 
+          completed: 0,
+          overdue: 0,
+          dueToday: 0
+        });
       });
-    });
-    
-    // API mock per le tasks
-    app.get('/api/tasks', (req, res) => {
-      res.json([]);
-    });
-    
-    // Fallback: serve index.html per SPA routing
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(staticPath, 'index.html'));
-    });
-    
-    // Avvia su porta libera
-    const server = app.listen(0, 'localhost', () => {
-      const port = server.address().port;
-      console.log(`[Electron] ✅ Local server started on port ${port}`);
-      resolve(port);
-    });
-    
-    server.on('error', (err) => {
-      console.error('[Electron] Server error:', err);
-      reject(err);
-    });
-    
-    // Salva riferimento server
-    localServer = server;
+      
+      app.get('/api/tasks', (req, res) => {
+        log('[Electron] API call: /api/tasks');
+        res.json([]);
+      });
+      
+      // Fallback per SPA
+      app.get('*', (req, res) => {
+        const indexPath = path.join(staticPath, 'index.html');
+        log(`[Electron] Serving index.html for: ${req.path}`);
+        res.sendFile(indexPath);
+      });
+      
+      // Avvia server su porta casuale
+      const server = app.listen(0, 'localhost', () => {
+        const port = server.address().port;
+        log(`[Electron] ✅ Local server started on port ${port}`);
+        resolve(port);
+      });
+      
+      server.on('error', (err) => {
+        log(`[Electron] Server error: ${err.message}`);
+        reject(err);
+      });
+      
+      localServer = server;
+      
+    } catch (error) {
+      log(`[Electron] Error creating server: ${error.message}`);
+      reject(error);
+    }
   });
 }
 
-// Controlla se development server è disponibile
+// Controlla development server
 function checkDevelopmentServer() {
   if (!isDevelopment) return Promise.resolve(false);
   
@@ -99,12 +170,12 @@ function checkDevelopmentServer() {
     const http = require('http');
     
     const req = http.get(`http://localhost:${DEV_PORT}/api/tasks/stats`, (res) => {
-      console.log(`[Electron] ✅ Development server running on port ${DEV_PORT}`);
+      log(`[Electron] ✅ Development server found on port ${DEV_PORT}`);
       resolve(true);
     });
     
     req.on('error', () => {
-      console.log(`[Electron] No development server on port ${DEV_PORT}`);
+      log(`[Electron] No development server on port ${DEV_PORT}`);
       resolve(false);
     });
     
@@ -117,51 +188,49 @@ function checkDevelopmentServer() {
 
 // Crea finestra principale
 async function createWindow() {
-  console.log('[Electron] Creating main window...');
+  log('[Electron] Creating main window...');
   
   let serverPort;
   
   try {
     if (isDevelopment) {
-      // In development: prova prima il dev server esterno
       const devServerRunning = await checkDevelopmentServer();
       
       if (devServerRunning) {
         serverPort = DEV_PORT;
-        console.log('[Electron] Using external development server');
+        log('[Electron] Using external development server');
       } else {
-        console.log('[Electron] Starting local server for development');
+        log('[Electron] Starting local server for development');
         serverPort = await createLocalServer();
       }
     } else {
-      // In production: sempre server locale
-      console.log('[Electron] Starting local server for production');
+      log('[Electron] Starting local server for production');
       serverPort = await createLocalServer();
     }
   } catch (error) {
-    console.error('[Electron] Failed to start server:', error);
+    log(`[Electron] ❌ Failed to start server: ${error.message}`);
     
-    // Mostra dialog di errore
+    // Mostra dialog di errore user-friendly
     const response = await dialog.showMessageBox(null, {
       type: 'error',
       title: 'Errore Avvio InsuraTask',
       message: 'Impossibile avviare l\'applicazione',
-      detail: error.message,
-      buttons: ['Esci', 'Mostra Dettagli'],
+      detail: `${error.message}\n\nIl file di log è stato salvato come insuratask-debug.log`,
+      buttons: ['Esci', 'Mostra Log'],
       defaultId: 0
     });
     
     if (response.response === 1) {
-      // Mostra dettagli
-      showErrorWindow(error);
-      return;
-    } else {
-      app.quit();
-      return;
+      // Mostra log
+      const logPath = path.join(process.cwd(), 'insuratask-debug.log');
+      shell.openPath(logPath);
     }
+    
+    app.quit();
+    return;
   }
 
-  // Crea la finestra principale
+  // Crea finestra
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -178,18 +247,19 @@ async function createWindow() {
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
   });
 
+  log('[Electron] Main window created');
+
   // Setup menu
   setupMenu();
 
   try {
     const appUrl = `http://localhost:${serverPort}`;
-    console.log(`[Electron] Loading app from: ${appUrl}`);
+    log(`[Electron] Loading app from: ${appUrl}`);
     
     await mainWindow.loadURL(appUrl);
     
-    // Mostra la finestra quando è pronta
     mainWindow.once('ready-to-show', () => {
-      console.log('[Electron] ✅ Window ready, showing app');
+      log('[Electron] ✅ Window ready, showing app');
       mainWindow.show();
       
       if (process.platform === 'darwin') {
@@ -197,18 +267,17 @@ async function createWindow() {
       }
       mainWindow.focus();
       
-      // DevTools solo in development
       if (isDevelopment) {
         mainWindow.webContents.openDevTools();
       }
     });
     
   } catch (error) {
-    console.error('[Electron] Failed to load app:', error);
+    log(`[Electron] ❌ Failed to load app: ${error.message}`);
     showErrorWindow(error);
   }
 
-  // Gestisci i link esterni
+  // Gestisci link esterni
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
@@ -225,7 +294,7 @@ function showErrorWindow(error) {
       <meta charset="utf-8">
       <style>
         body { 
-          font-family: system-ui, -apple-system, sans-serif;
+          font-family: system-ui, sans-serif;
           display: flex; 
           justify-content: center; 
           align-items: center; 
@@ -251,7 +320,7 @@ function showErrorWindow(error) {
           margin: 20px 0;
           font-family: monospace;
           text-align: left;
-          white-space: pre-line;
+          word-break: break-word;
         }
         button {
           background: #4ecdc4;
@@ -271,14 +340,14 @@ function showErrorWindow(error) {
         <h1>⚠️ Errore InsuraTask</h1>
         <p>L'applicazione non è riuscita ad avviarsi.</p>
         <div class="error">${error.message}</div>
-        <p><strong>Soluzioni:</strong></p>
+        <p><strong>Cosa controllare:</strong></p>
         <ul style="text-align: left;">
-          <li>Assicurati di aver fatto il build: <code>npm run build</code></li>
-          <li>Verifica che i file esistano nella cartella dist/</li>
-          <li>Prova a riavviare l'applicazione</li>
+          <li>Verifica che il file sia scaricato completamente</li>
+          <li>Controlla il file insuratask-debug.log per dettagli</li>
+          <li>Prova a riavviare come amministratore</li>
+          <li>Disabilita temporaneamente l'antivirus</li>
         </ul>
         <button onclick="location.reload()">🔄 Riprova</button>
-        <button onclick="require('electron').shell.openExternal('https://github.com/FDRFSR/insuratask/issues')">🐛 Segnala</button>
       </div>
     </body>
     </html>
@@ -333,9 +402,16 @@ function setupMenu() {
             dialog.showMessageBox(mainWindow, {
               type: 'info',
               title: 'InsuraTask',
-              message: 'InsuraTask v1.0.0',
+              message: 'InsuraTask v1.0.8',
               detail: 'Gestione attività per agenti assicurativi\n\nSviluppato da Federico Fusarri'
             });
+          }
+        },
+        {
+          label: 'Log Debug',
+          click: () => {
+            const logPath = path.join(process.cwd(), 'insuratask-debug.log');
+            shell.openPath(logPath);
           }
         }
       ]
@@ -345,11 +421,15 @@ function setupMenu() {
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
-// Event handlers
-app.whenReady().then(createWindow);
+// Event handlers con logging
+app.whenReady().then(() => {
+  log('[Electron] App ready, creating window');
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
-  // Chiudi server locale
+  log('[Electron] All windows closed');
+  
   if (localServer) {
     localServer.close();
   }
@@ -366,16 +446,18 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
+  log('[Electron] App quitting');
   if (localServer) {
     localServer.close();
   }
 });
 
-// Gestione errori
+// Gestione errori critici
 process.on('uncaughtException', (error) => {
-  console.error('[Electron] Uncaught Exception:', error);
+  log(`[Electron] ❌ UNCAUGHT EXCEPTION: ${error.message}`);
+  log(`[Electron] Stack: ${error.stack}`);
 });
 
 process.on('unhandledRejection', (reason) => {
-  console.error('[Electron] Unhandled Rejection:', reason);
+  log(`[Electron] ❌ UNHANDLED REJECTION: ${reason}`);
 });
