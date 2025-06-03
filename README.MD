@@ -397,6 +397,6 @@ screenshots/
 
 **Sviluppato con ❤️ per la community degli agenti assicurativi**
 
-[⭐ Lascia una stella](https://github.com/FDRFSR/insuratask) • [🐛 Segnala un bug](https://github.com/FDRFSR/insuratask/issues) • [💡 Richiedi una feature](https://github.com/FDRFSR/insuratask/issues)
+[⭐ Lascia una stella](https://github.com/FDRFSR/insurance-daily-tracker) • [🐛 Segnala un bug](https://github.com/FDRFSR/insurance-daily-tracker/issues) • [💡 Richiedi una feature](https://github.com/FDRFSR/insurance-daily-tracker/issues)
 
 </div>

@@ -94,7 +94,7 @@ jobs:
     - name: 🔍 Type check
       run: npm run check
 
-    - name: 🏗️ Build application
+    - name: 🏗️ Build application (Electron)
       run: npm run build
       env:
         CI: true
@@ -110,12 +110,12 @@ jobs:
         CSC_IDENTITY_AUTO_DISCOVERY: false
         DEBUG: electron-builder
 
-    # ⚡ Build pkg (binari standalone)
+    # ⚡ Build pkg (binari standalone) - USA IL NUOVO BUILD
     - name: ⚡ Build standalone binary
       run: |
         echo "Building standalone binary for ${{ matrix.platform }}..."
-        mkdir -p pkg-dist
         
+        # 🎯 USA IL NUOVO BUILD SCRIPT per pkg
         if [[ "${{ matrix.platform }}" == "win32" ]]; then
           npm run pkg:win
         elif [[ "${{ matrix.platform }}" == "darwin" ]]; then
@@ -128,7 +128,7 @@ jobs:
       shell: bash
       continue-on-error: true
 
-# 📋 Elenca file generati per debug
+    # 📋 Elenca file generati per debug
     - name: 📋 List generated files
       continue-on-error: true
       run: |
@@ -137,9 +137,10 @@ jobs:
         
         if [ -d "dist-electron" ]; then
           echo "📦 Electron build output:"
-          # 🔧 SEMPLIFICATO: Solo verifica esistenza directory
           echo "dist-electron directory exists ✅"
           du -sh dist-electron 2>/dev/null || echo "Could not get size"
+          echo "Files:"
+          ls -la dist-electron/ 2>/dev/null || echo "Could not list files"
         else
           echo "❌ No dist-electron directory found"
         fi
@@ -148,8 +149,21 @@ jobs:
           echo "⚡ PKG build output:" 
           echo "pkg-dist directory exists ✅"
           du -sh pkg-dist 2>/dev/null || echo "Could not get size"
+          echo "Files:"
+          ls -la pkg-dist/ 2>/dev/null || echo "Could not list files"
         else
           echo "❌ No pkg-dist directory found"
+        fi
+        
+        # 🎯 CONTROLLA ANCHE dist-pkg per debug
+        if [ -d "dist-pkg" ]; then
+          echo "🔧 PKG CommonJS build output:"
+          echo "dist-pkg directory exists ✅"
+          du -sh dist-pkg 2>/dev/null || echo "Could not get size"
+          echo "Files:"
+          ls -la dist-pkg/ 2>/dev/null || echo "Could not list files"
+        else
+          echo "❌ No dist-pkg directory found"
         fi
       shell: bash
 
@@ -291,6 +305,12 @@ jobs:
         echo "- **Windows**: Windows 10+ (64-bit)" >> CHANGELOG.md
         echo "- **macOS**: macOS 10.15+ (Catalina)" >> CHANGELOG.md
         echo "- **Linux**: Ubuntu 18.04+ / equivalent" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "### 🔧 Known Issues Fixed" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "- ✅ Fixed ES Module compatibility issue in standalone builds" >> CHANGELOG.md
+        echo "- ✅ Improved build process for better compatibility" >> CHANGELOG.md
+        echo "- ✅ Enhanced error handling and debugging" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "### 🐛 Issues?" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
