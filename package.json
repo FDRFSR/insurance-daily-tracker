@@ -5,12 +5,15 @@
   "license": "MIT",
   "description": "Gestione attività per agenti assicurativi",
   "author": "Federico Fusarri <iscrizioni.fusarri@gmail.com>",
-  "homepage": "https://github.com/FDRFSR/insurance-daily-tracker",
+  "homepage": "https://github.com/FDRFSR/insuratask",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FDRFSR/insurance-daily-tracker.git"
+    "url": "https://github.com/FDRFSR/insuratask.git"
   },
   "main": "electron/main.cjs",
+  "bin": {
+    "insuratask": "dist/index.js"
+  },
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
