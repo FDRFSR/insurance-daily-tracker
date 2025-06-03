@@ -128,24 +128,26 @@ jobs:
       shell: bash
       continue-on-error: true
 
-    # 📋 Elenca file generati per debug
+# 📋 Elenca file generati per debug
     - name: 📋 List generated files
+      continue-on-error: true
       run: |
         echo "=== Build output summary ==="
         echo "Working directory: $(pwd)"
         
         if [ -d "dist-electron" ]; then
           echo "📦 Electron build output:"
-          find dist-electron -type f -name "*" | head -10
-          du -sh dist-electron/* 2>/dev/null || echo "No files found"
+          # 🔧 SEMPLIFICATO: Solo verifica esistenza directory
+          echo "dist-electron directory exists ✅"
+          du -sh dist-electron 2>/dev/null || echo "Could not get size"
         else
           echo "❌ No dist-electron directory found"
         fi
         
         if [ -d "pkg-dist" ]; then
           echo "⚡ PKG build output:" 
-          find pkg-dist -type f -name "*" | head -10
-          du -sh pkg-dist/* 2>/dev/null || echo "No files found"
+          echo "pkg-dist directory exists ✅"
+          du -sh pkg-dist 2>/dev/null || echo "Could not get size"
         else
           echo "❌ No pkg-dist directory found"
         fi
