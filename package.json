@@ -15,6 +15,7 @@
     "insuratask": "dist/index.js"
   },
   "scripts": {
+    "postinstall": "electron-builder install-app-deps",
     "dev": "NODE_ENV=development tsx server/index.ts",
     "dev:win": "set NODE_ENV=development && tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
@@ -107,7 +108,6 @@
     "drizzle-kit": "^0.30.4",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
-    "electron-rebuild": "^3.2.9",
     "esbuild": "^0.25.0",
     "pkg": "^5.8.1",
     "postcss": "^8.4.47",
@@ -172,8 +172,7 @@
       "createStartMenuShortcut": true,
       "uninstallDisplayName": "InsuraTask",
       "artifactName": "${productName}-${version}-setup.${ext}",
-      "shortcutName": "InsuraTask",
-      "unpackDirName": "InsuraTask"
+      "shortcutName": "InsuraTask"
     },
     "mac": {
       "category": "public.app-category.business",
