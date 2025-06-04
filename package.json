@@ -31,7 +31,8 @@
     "pkg:linux": "npm run build && pkg . --targets node18-linux-x64 --out-path pkg-dist",
     "release:patch": "npm version patch && git push && git push --tags",
     "release:minor": "npm version minor && git push && git push --tags",
-    "release:major": "npm version major && git push && git push --tags"
+    "release:major": "npm version major && git push && git push --tags",
+    "electron:dev:safe": "NODE_ENV=development concurrently \"npm run dev\" \"wait-on http://localhost:5000 && electron --no-sandbox .\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -63,7 +64,7 @@
     "@radix-ui/react-toggle-group": "^1.1.3",
     "@radix-ui/react-tooltip": "^1.2.0",
     "@tanstack/react-query": "^5.60.5",
-    "better-sqlite3": "^11.10.0",
+    "better-sqlite3": "^8.3.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -102,6 +103,7 @@
     "drizzle-kit": "^0.30.4",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
+    "electron-rebuild": "^3.2.9",
     "esbuild": "^0.25.0",
     "pkg": "^5.8.1",
     "postcss": "^8.4.47",
@@ -125,26 +127,34 @@
       {
         "from": "node_modules/express",
         "to": "node_modules/express",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "node_modules/better-sqlite3",
         "to": "node_modules/better-sqlite3",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "extraResources": [
       {
         "from": "dist/public",
         "to": "static",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "requestedExecutionLevel": "asInvoker"
@@ -154,7 +164,9 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
@@ -162,7 +174,9 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "Office"
