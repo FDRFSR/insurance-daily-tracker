@@ -1,3 +1,4 @@
+// client/src/components/enhanced-calendar.tsx
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Plus, Clock, AlertTriangle } from "lucide-react";
@@ -19,20 +20,42 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
     queryKey: ["/api/tasks"],
   });
 
-  // Memoized calendar data
+  // 🎯 FUNZIONE HELPER PER GESTIRE LE DATE SENZA PROBLEMI DI FUSO ORARIO
+  const formatDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // 🎯 FUNZIONE HELPER PER CONFRONTARE DATE IN MODO SICURO
+  const isSameDay = (date1: Date, date2: Date): boolean => {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+  };
+
+  // 🎯 FUNZIONE HELPER PER CREARE UNA DATA LOCALE SENZA PROBLEMI DI TIMEZONE
+  const createLocalDate = (year: number, month: number, day: number): Date => {
+    return new Date(year, month, day);
+  };
+
+  // Memoized calendar data with corrected timezone handling
   const calendarData = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const today = new Date();
     
     // Get first day of month and how many days
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
+    const firstDay = createLocalDate(year, month, 1);
+    const lastDay = createLocalDate(year, month + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Monday = 0
+    
+    // Monday = 0, Sunday = 6
+    const startingDayOfWeek = (firstDay.getDay() + 6) % 7; // Convert Sunday=0 to Sunday=6
     
     // Get previous month's last days
-    const prevMonth = new Date(year, month - 1, 0);
+    const prevMonth = createLocalDate(year, month - 1, 0);
     const daysInPrevMonth = prevMonth.getDate();
     
     const days = [];
@@ -40,48 +63,65 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
     // Previous month days
     for (let i = startingDayOfWeek - 1; i >= 0; i--) {
       const day = daysInPrevMonth - i;
-      const date = new Date(year, month - 1, day);
+      const date = createLocalDate(year, month - 1, day);
+      const dateStr = formatDateString(date);
+      
       days.push({
         day: day.toString(),
-        date: date.toISOString().split('T')[0],
+        date: dateStr,
         isCurrentMonth: false,
-        isToday: false,
+        isToday: isSameDay(date, today),
         isPast: date < today,
-        tasks: []
+        tasks: allTasks.filter(task => task.dueDate === dateStr)
       });
     }
     
     // Current month days
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(year, month, day);
-      const dateStr = date.toISOString().split('T')[0];
-      const todayStr = today.toISOString().split('T')[0];
+      const date = createLocalDate(year, month, day);
+      const dateStr = formatDateString(date);
       
-      // Filter tasks for this date
+      // 🎯 FILTRO CORRETTO PER LE TASK
       const dayTasks = allTasks.filter(task => task.dueDate === dateStr);
       
       days.push({
         day: day.toString(),
         date: dateStr,
         isCurrentMonth: true,
-        isToday: dateStr === todayStr,
+        isToday: isSameDay(date, today),
         isPast: date < today,
         tasks: dayTasks
       });
     }
     
-    // Next month days to fill the grid
-    const remainingDays = 42 - days.length; // 6 rows × 7 days = 42
+    // Next month days to fill the grid (ensure we have exactly 42 days = 6 weeks)
+    const totalDaysNeeded = 42;
+    const remainingDays = totalDaysNeeded - days.length;
+    
     for (let day = 1; day <= remainingDays; day++) {
-      const date = new Date(year, month + 1, day);
+      const date = createLocalDate(year, month + 1, day);
+      const dateStr = formatDateString(date);
+      
       days.push({
         day: day.toString(),
-        date: date.toISOString().split('T')[0],
+        date: dateStr,
         isCurrentMonth: false,
-        isToday: false,
+        isToday: isSameDay(date, today),
         isPast: date < today,
-        tasks: []
+        tasks: allTasks.filter(task => task.dueDate === dateStr)
       });
+    }
+    
+    // 🎯 DEBUG: Log per verificare che le date siano corrette
+    if (process.env.NODE_ENV === 'development') {
+      const daysWithTasks = days.filter(d => d.tasks.length > 0);
+      console.log('🗓️ Giorni con task:', daysWithTasks.map(d => ({
+        date: d.date,
+        day: d.day,
+        isCurrentMonth: d.isCurrentMonth,
+        taskCount: d.tasks.length,
+        tasks: d.tasks.map(t => ({ title: t.title, dueDate: t.dueDate }))
+      })));
     }
     
     return days;
@@ -93,11 +133,11 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
   ];
 
   const handlePreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    setCurrentDate(createLocalDate(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   };
 
   const handleNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    setCurrentDate(createLocalDate(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
   const handleDayClick = (date: string, isCurrentMonth: boolean) => {
@@ -123,6 +163,19 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
     if (priority === 'high') return <AlertTriangle className="w-3 h-3" />;
     if (priority === 'medium') return <Clock className="w-3 h-3" />;
     return null;
+  };
+
+  // 🎯 HELPER PER FORMATTARE LA DATA NEL POPOVER
+  const formatDateForDisplay = (dateStr: string) => {
+    // Crea una data locale senza problemi di timezone
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = createLocalDate(year, month - 1, day);
+    
+    return date.toLocaleDateString('it-IT', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    });
   };
 
   return (
@@ -174,14 +227,14 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
                   >
                     <span className="relative z-10">{dayData.day}</span>
                     
-                    {/* Event indicators */}
+                    {/* Event indicators - Solo se ci sono task per questo giorno */}
                     {hasEvents && dayData.isCurrentMonth && (
                       <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-0.5">
                         {dayData.tasks.slice(0, 3).map((task, taskIndex) => (
                           <div
                             key={taskIndex}
                             className={`w-1.5 h-1.5 rounded-full ${getTaskTypeColor(task.category, task.status)}`}
-                            title={task.title}
+                            title={`${task.title} - ${task.dueDate}`}
                           />
                         ))}
                         {dayData.tasks.length > 3 && (
@@ -199,17 +252,13 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
                   </div>
                 </PopoverTrigger>
                 
-                {/* Popover with day details */}
+                {/* Popover with day details - Solo se ci sono task */}
                 {hasEvents && (
                   <PopoverContent className="w-80 p-3" align="center">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-sm">
-                          {new Date(dayData.date).toLocaleDateString('it-IT', {
-                            weekday: 'long',
-                            day: 'numeric',
-                            month: 'long'
-                          })}
+                          {formatDateForDisplay(dayData.date)}
                         </h4>
                         <Button
                           size="sm"
@@ -255,6 +304,12 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
                                    task.priority === 'medium' ? 'Media' : 'Bassa'}
                                 </Badge>
                               </div>
+                              {/* 🎯 DEBUG: Mostra la data della task */}
+                              {process.env.NODE_ENV === 'development' && (
+                                <div className="text-xs text-gray-400 mt-1">
+                                  Due: {task.dueDate}
+                                </div>
+                              )}
                             </div>
                             {getPriorityIcon(task.priority)}
                           </div>

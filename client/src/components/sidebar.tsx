@@ -1,15 +1,22 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Phone, Calculator, FileText, Cog } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import type { Task } from "@shared/schema";
 
 interface SidebarProps {
   onDateSelect?: (date: string | null) => void;
   selectedDate?: string | null;
-  onQuickAction?: (category: string) => void; // 🎯 Nuova prop per le azioni rapide
+  onQuickAction?: (category: string) => void;
 }
 
 export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: SidebarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  
+  // Fetch tasks using TanStack Query
+  const { data: allTasks = [] } = useQuery<Task[]>({
+    queryKey: ["/api/tasks"],
+  });
 
   const handlePreviousMonth = () => {
     setCurrentDate(prev => {
@@ -82,12 +89,23 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
       const isCurrentMonth = currentDay.getMonth() === month;
       const isToday = currentDay.toDateString() === today.toDateString();
       
+      // Formatta la data corrente come YYYY-MM-DD per verificare se ci sono attività
+      const formattedDate = currentDay.toISOString().split('T')[0];
+      
+      // Controlla se ci sono attività per questa data
+      const tasksForDate = allTasks.filter(task => task.dueDate === formattedDate);
+      const hasEvent = tasksForDate.length > 0;
+      
+      // Controlla se ci sono attività in ritardo
+      const hasOverdue = tasksForDate.some(task => task.status === "overdue");
+      
       days.push({
         day: currentDay.getDate(),
         isCurrentMonth,
         isToday,
-        hasEvent: false, // Qui potresti aggiungere logica per eventi reali
-        isOverdue: false
+        hasEvent,
+        isOverdue: hasOverdue,
+        tasksForDate  // Passa anche gli eventi specifici per questa data
       });
       
       currentDay.setDate(currentDay.getDate() + 1);
@@ -98,7 +116,7 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
 
   const calendarDays = generateCalendarDays();
 
-  // 🎯 Mappa le categorie alle chiavi utilizzate nel backend
+  // Mappa le categorie alle chiavi utilizzate nel backend
   const quickActions = [
     {
       title: "Chiamata Cliente",
@@ -106,7 +124,7 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
       icon: Phone,
       color: "bg-blue-50 hover:bg-blue-100",
       iconColor: "bg-blue-600",
-      category: "calls" // 🎯 Aggiunto campo categoria
+      category: "calls"
     },
     {
       title: "Nuovo Preventivo", 
@@ -114,7 +132,7 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
       icon: Calculator,
       color: "bg-green-50 hover:bg-green-100",
       iconColor: "bg-green-600",
-      category: "quotes" // 🎯 Aggiunto campo categoria
+      category: "quotes"
     },
     {
       title: "Gestisci Sinistro",
@@ -122,7 +140,7 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
       icon: FileText,
       color: "bg-red-50 hover:bg-red-100", 
       iconColor: "bg-red-600",
-      category: "claims" // 🎯 Aggiunto campo categoria
+      category: "claims"
     },
     {
       title: "Attività Amministrativa",
@@ -130,11 +148,11 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
       icon: Cog,
       color: "bg-orange-50 hover:bg-orange-100",
       iconColor: "bg-orange-600",
-      category: "documents" // 🎯 Aggiunto campo categoria
+      category: "documents"
     }
   ];
 
-  // 🎯 Handler per le azioni rapide
+  // Handler per le azioni rapide
   const handleQuickAction = (category: string) => {
     if (onQuickAction) {
       onQuickAction(category);
@@ -161,6 +179,20 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
       color: "from-purple-400 to-purple-600"
     }
   ];
+
+  // Funzione per ottenere i colori in base alla categoria
+  const getCategoryColor = (category: string, status: string) => {
+    if (status === 'overdue') return 'bg-red-500';
+    
+    switch (category) {
+      case 'calls': return 'bg-blue-500';
+      case 'quotes': return 'bg-green-500';
+      case 'claims': return 'bg-red-500';
+      case 'documents': return 'bg-yellow-500';
+      case 'appointments': return 'bg-purple-500';
+      default: return 'bg-gray-500';
+    }
+  };
 
   return (
     <aside className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col gap-6">
@@ -200,21 +232,33 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
               <div
                 key={index}
                 onClick={() => handleDateClick(date.day, date.isCurrentMonth)}
-                className={`p-2 text-center cursor-pointer relative transition-colors ${
-                  date.isToday
+                className={`
+                  p-2 text-center cursor-pointer relative transition-colors
+                  ${date.isToday
                     ? "bg-blue-600 text-white rounded font-medium"
                     : isDateSelected(date.day, date.isCurrentMonth)
                     ? "bg-blue-100 text-blue-800 rounded font-medium"
                     : date.isCurrentMonth
                     ? "text-gray-900 hover:bg-gray-100 rounded"
                     : "text-gray-400"
-                }`}
+                  }
+                `}
               >
                 {date.day}
-                {date.hasEvent && (
-                  <div className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full ${
-                    date.isOverdue ? "bg-red-500" : "bg-orange-500"
-                  }`}></div>
+                
+                {/* Event indicators */}
+                {date.hasEvent && date.isCurrentMonth && (
+                  <div className="absolute bottom-0.5 left-0 right-0 flex justify-center space-x-0.5">
+                    {date.tasksForDate.slice(0, 3).map((task, i) => (
+                      <div 
+                        key={i}
+                        className={`w-1.5 h-1.5 rounded-full ${getCategoryColor(task.category, task.status)}`}
+                      />
+                    ))}
+                    {date.tasksForDate.length > 3 && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-500" />
+                    )}
+                  </div>
                 )}
               </div>
             ))}
@@ -229,7 +273,7 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
           {quickActions.map((action, index) => (
             <button
               key={index}
-              onClick={() => handleQuickAction(action.category)} // 🎯 Aggiunto onClick handler
+              onClick={() => handleQuickAction(action.category)}
               className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left ${action.color} hover:scale-[1.02] transform transition-transform`}
             >
               <div className={`w-8 h-8 ${action.iconColor} rounded-lg flex items-center justify-center`}>
