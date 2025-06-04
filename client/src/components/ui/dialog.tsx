@@ -21,7 +21,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-[9998]",
+      "fixed inset-0 z-[2147483646]",
       className
     )}
     style={{
@@ -29,7 +29,10 @@ const DialogOverlay = React.forwardRef<
       opacity: 0.8,
       willChange: 'opacity',
       backfaceVisibility: 'hidden',
-      transform: 'translate3d(0, 0, 0)'
+      transform: 'translate3d(0, 0, 0)',
+      // Force highest z-index for Windows Electron
+      zIndex: 2147483646,
+      isolation: 'isolate'
     }}
     {...props}
   />
@@ -45,14 +48,21 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-[9999] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-gray-200 bg-white p-6 shadow-2xl sm:rounded-lg",
+        "fixed left-[50%] top-[50%] z-[2147483647] grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border border-gray-200 bg-white p-6 shadow-2xl sm:rounded-lg",
         className
       )}
       style={{
         backgroundColor: '#ffffff',
         willChange: 'transform, opacity',
         backfaceVisibility: 'hidden',
-        isolation: 'isolate'
+        isolation: 'isolate',
+        // Force absolute highest z-index for Windows Electron
+        zIndex: 2147483647,
+        // Ensure positioning works correctly in Electron
+        position: 'fixed',
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)'
       }}
       {...props}
     >
