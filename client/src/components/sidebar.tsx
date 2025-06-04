@@ -163,7 +163,7 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
   ];
 
   return (
-    <div className="space-y-6">
+    <aside className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col gap-6">
       {/* Calendar Widget */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Calendario</h3>
@@ -264,6 +264,6 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
           ))}
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

@@ -199,23 +199,21 @@ export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
 
   if (isLoading) {
     return (
+      // Loading state
       <div className="lg:col-span-2">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200">
+          <div className="p-6 border-b border-gray-100">
             <div className="animate-pulse">
               <div className="h-6 bg-gray-300 rounded w-32 mb-4"></div>
               <div className="flex space-x-4">
-                <div className="h-10 bg-gray-300 rounded w-64"></div>
-                <div className="h-10 bg-gray-300 rounded w-32"></div>
+                <div className="h-10 bg-gray-300 rounded-full w-64"></div>
+                <div className="h-10 bg-gray-300 rounded-full w-32"></div>
               </div>
             </div>
           </div>
           <div className="p-6 space-y-4">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="border border-gray-200 rounded-lg p-4 animate-pulse">
-                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
-              </div>
+              <div key={i} className="border border-gray-100 rounded-2xl p-4 animate-pulse bg-gray-50"></div>
             ))}
           </div>
         </div>
@@ -226,7 +224,7 @@ export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
   return (
     <>
       <div className="lg:col-span-2">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100">
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 mb-4">
               <div className="flex items-center space-x-2">
@@ -244,10 +242,13 @@ export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
                     placeholder="Cerca attività o cliente..."
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10 w-full sm:w-64"
+                    className="pl-10 w-full sm:w-64 rounded-full border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white text-gray-900 shadow-none transition-all duration-150"
                   />
                 </div>
-                <Button onClick={handleNewTask} className="bg-blue-600 hover:bg-blue-700">
+                <Button 
+                  onClick={handleNewTask} 
+                  className="bg-blue-600 hover:bg-blue-700 rounded-full px-6 py-2 shadow-none focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all duration-150 text-white font-semibold"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Nuova Attività
                 </Button>
@@ -274,7 +275,8 @@ export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
 
           <div className="p-6 space-y-4">
             {filteredTasks.length === 0 ? (
-              <div className="text-center py-8">
+              // Empty state
+              <div className="text-center py-8 bg-white rounded-2xl border border-gray-100 shadow-sm">
                 {selectedDate ? (
                   <div>
                     <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -295,7 +297,7 @@ export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
                 return (
                   <div
                     key={task.id}
-                    className={`border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow ${
+                    className={`border border-gray-200 rounded-2xl p-5 hover:shadow-lg focus-within:shadow-lg transition-all duration-150 bg-white flex flex-col gap-2 ${
                       isOverdue ? "bg-red-50 border-red-200" : ""
                     } ${task.completed ? "opacity-50" : ""}`}
                   >

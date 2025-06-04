@@ -57,10 +57,10 @@ export default function DashboardStats() {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {statCards.map((card, index) => (
-        <div key={index} className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-          <div className="flex items-center justify-between">
+        <div key={index} className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col items-center gap-2 transition-all duration-150">
+          <div className="flex items-center justify-between w-full">
             <div>
               <p className="text-sm font-medium text-gray-600">{card.title}</p>
               <p className="text-2xl font-bold text-gray-900">{card.value}</p>

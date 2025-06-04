@@ -109,19 +109,20 @@ function SimpleSelect({ value, onValueChange, options, placeholder, disabled, cl
   };
 
   return (
-    <div ref={containerRef} className={`relative ${className || ''}`}>
+    <div ref={containerRef} className={`relative ${className || ''}`} style={{ borderColor: 'var(--border, #E7E5E4)', borderStyle: 'solid', outline: 'none', boxShadow: 'none' }}>
       <button
         type="button"
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
         disabled={disabled}
         className={`
-          flex h-10 w-full items-center justify-between rounded-md border border-gray-300 
+          flex h-10 w-full items-center justify-between rounded-full border border-[var(--border)]
           bg-white px-3 py-2 text-sm text-left
-          hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200
+          hover:border-[var(--ring)] focus:border-[var(--ring)] focus:ring-2 focus:ring-blue-200
           disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50
-          ${isOpen ? 'border-blue-500 ring-2 ring-blue-200' : ''}
+          ${isOpen ? 'border-[var(--ring)] ring-2 ring-blue-200' : ''}
         `}
+        style={{ borderColor: 'var(--border, #E7E5E4)', borderStyle: 'solid', outline: 'none', boxShadow: 'none' }}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
@@ -138,7 +139,7 @@ function SimpleSelect({ value, onValueChange, options, placeholder, disabled, cl
       {isOpen && (
         <div 
           ref={dropdownRef}
-          className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          className="absolute top-full left-0 right-0 mt-1 bg-white border border-[var(--border)] rounded-2xl shadow-lg max-h-60 overflow-y-auto"
           style={{ zIndex: 1000 }}
           role="listbox"
         >
@@ -385,7 +386,8 @@ export default function TaskModal({
               placeholder="Inserisci il titolo dell'attività..."
               required
               autoFocus={!preselectedCategory && !preselectedDate}
-              className="w-full"
+              className="w-full border border-[var(--border)] focus:border-[var(--ring)] rounded-full bg-white text-gray-900 shadow-none transition-all duration-150"
+              style={{ borderColor: 'var(--border, #E7E5E4)', borderStyle: 'solid', outline: 'none', boxShadow: 'none' }}
             />
           </div>
 
@@ -399,7 +401,7 @@ export default function TaskModal({
               options={categoryOptions}
               placeholder="Seleziona categoria"
               disabled={!!preselectedCategory}
-              className="w-full"
+              className="w-full border border-[var(--border)] focus:border-[var(--ring)] rounded-full bg-white text-gray-900 shadow-none transition-all duration-150"
             />
             {preselectedCategory && (
               <p className="text-xs text-gray-500 mt-1">
@@ -418,7 +420,8 @@ export default function TaskModal({
               onChange={(e) => handleInputChange("client", e.target.value)}
               placeholder="Nome del cliente..."
               autoFocus={!!preselectedCategory || !!preselectedDate}
-              className="w-full"
+              className="w-full border border-[var(--border)] focus:border-[var(--ring)] rounded-full bg-white text-gray-900 shadow-none transition-all duration-150"
+              style={{ borderColor: 'var(--border, #E7E5E4)', borderStyle: 'solid', outline: 'none', boxShadow: 'none' }}
             />
           </div>
 
@@ -432,7 +435,8 @@ export default function TaskModal({
               onChange={(e) => handleInputChange("description", e.target.value)}
               placeholder="Descrizione dettagliata dell'attività..."
               rows={3}
-              className="w-full resize-none"
+              className="w-full resize-none border border-[var(--border)] focus:border-[var(--ring)] rounded-2xl bg-white text-gray-900 shadow-none transition-all duration-150"
+              style={{ borderColor: 'var(--border, #E7E5E4)', borderStyle: 'solid', outline: 'none', boxShadow: 'none' }}
             />
           </div>
 
@@ -446,7 +450,8 @@ export default function TaskModal({
                 type="date"
                 value={formData.dueDate}
                 onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                className={`w-full ${preselectedDate ? 'ring-2 ring-green-200 border-green-300' : ''}`}
+                className={`w-full border border-[var(--border)] focus:border-[var(--ring)] rounded-full bg-white text-gray-900 shadow-none transition-all duration-150 ${preselectedDate ? 'ring-2 ring-green-200 border-green-300' : ''}`}
+                style={{ borderColor: 'var(--border, #E7E5E4)', outline: 'none', boxShadow: 'none' }}
               />
               {preselectedDate && (
                 <p className="text-xs text-green-600 mt-1">
@@ -463,7 +468,8 @@ export default function TaskModal({
                 type="time"
                 value={formData.dueTime}
                 onChange={(e) => handleInputChange("dueTime", e.target.value)}
-                className="w-full"
+                className="w-full border border-[var(--border)] focus:border-[var(--ring)] rounded-full bg-white text-gray-900 shadow-none transition-all duration-150"
+                style={{ borderColor: 'var(--border, #E7E5E4)', outline: 'none', boxShadow: 'none' }}
               />
             </div>
           </div>
@@ -476,7 +482,7 @@ export default function TaskModal({
               value={formData.priority}
               onValueChange={(value) => handleInputChange("priority", value)}
               options={priorityOptions}
-              className="w-full"
+              className="w-full border border-[var(--border)] focus:border-[var(--ring)] rounded-full bg-white text-gray-900 shadow-none transition-all duration-150"
             />
           </div>
 

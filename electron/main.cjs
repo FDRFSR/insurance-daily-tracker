@@ -184,20 +184,31 @@ function checkDevelopmentServer() {
   
   return new Promise((resolve) => {
     const http = require('http');
+    let isResolved = false;
     
     const req = http.get(`http://localhost:${DEV_PORT}/api/tasks/stats`, (res) => {
-      log(`[Electron] ✅ Development server found on port ${DEV_PORT}`);
-      resolve(true);
+      if (!isResolved) {
+        isResolved = true;
+        log(`[Electron] ✅ Development server found on port ${DEV_PORT}`);
+        resolve(true);
+      }
     });
     
     req.on('error', () => {
-      log(`[Electron] ❌ No development server on port ${DEV_PORT}`);
-      resolve(false);
+      if (!isResolved) {
+        isResolved = true;
+        log(`[Electron] ❌ No development server on port ${DEV_PORT}`);
+        resolve(false);
+      }
     });
     
     req.setTimeout(2000, () => {
-      req.destroy();
-      resolve(false);
+      if (!isResolved) {
+        isResolved = true;
+        req.destroy();
+        log('[Electron] ⌛ Development server check timed out');
+        resolve(false);
+      }
     });
   });
 }
@@ -641,6 +652,7 @@ process.on('uncaughtException', (error) => {
   log(`[Electron] Stack: ${error.stack}`);
 });
 
-process.on('unhandledRejection', (reason) => {
-  log(`[Electron] ❌ UNHANDLED REJECTION: ${reason}`);
+process.on('unhandledRejection', (reason, promise) => {
+  log(`[Electron] ❌ UNHANDLED REJECTION at: ${promise}`);
+  log(`[Electron] Reason: ${reason?.stack || reason}`);
 });

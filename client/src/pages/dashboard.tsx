@@ -47,10 +47,8 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <DashboardStats />
-        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <TaskList 
             onTaskEdit={handleTaskEdit} 
@@ -59,12 +57,10 @@ export default function Dashboard() {
           <Sidebar 
             onDateSelect={handleDateSelect}
             selectedDate={selectedDate}
-            onQuickAction={handleQuickAction} // 🎯 Passa l'handler per le azioni rapide
+            onQuickAction={handleQuickAction}
           />
         </div>
       </div>
-
-      {/* Floating Action Button for Mobile */}
       <Button
         onClick={handleNewTask}
         className="fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg hover:shadow-xl lg:hidden z-40 bg-blue-600 hover:bg-blue-700"
@@ -72,13 +68,12 @@ export default function Dashboard() {
       >
         <Plus className="h-6 w-6" />
       </Button>
-
       <TaskModal
         isOpen={isModalOpen}
-        onClose={handleCloseModal} // 🎯 Usa il nuovo handler che resetta tutto
+        onClose={handleCloseModal}
         task={editingTask}
-        preselectedCategory={preselectedCategory} // 🎯 Passa la categoria preselezionata
-        preselectedDate={selectedDate || undefined} // 🎯 Converti null a undefined per TypeScript
+        preselectedCategory={preselectedCategory}
+        preselectedDate={selectedDate || undefined}
       />
     </div>
   );
