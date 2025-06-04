@@ -112,41 +112,89 @@ jobs:
       shell: bash
       continue-on-error: true
 
-    - name: 📋 List generated files
+    - name: 📋 List and filter build files
       run: |
-        echo "=== Build output summary ==="
-        echo "Working directory: $(pwd)"
+        echo "=== Build output analysis ==="
         
         if [ -d "dist-electron" ]; then
-          echo "📦 Electron build output:"
-          du -sh dist-electron 2>/dev/null || echo "Could not get size"
-          ls -la dist-electron/ 2>/dev/null || echo "Could not list files"
-        fi
-        
-        if [ -d "pkg-dist" ]; then
-          echo "⚡ PKG build output:" 
-          du -sh pkg-dist 2>/dev/null || echo "Could not get size"
-          ls -la pkg-dist/ 2>/dev/null || echo "Could not list files"
-        fi
-      shell: bash
-
-    - name: 📝 Rename artifacts
-      run: |
-        if [ -d "dist-electron" ]; then
+          echo "📦 All Electron files:"
+          ls -la dist-electron/
+          
+          echo ""
+          echo "🎯 Main application files:"
           cd dist-electron
-          for file in *.*; do
-            if [[ -f "$file" && "$file" != *.yml && "$file" != *.yaml ]]; then
-              extension="${file##*.}"
-              new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64.${extension}"
-              if [[ "$file" != "$new_name" ]]; then
-                mv "$file" "$new_name"
-                echo "Renamed: $file -> $new_name"
+          
+          # Lista solo i file principali (esclude ausiliari)
+          for file in *; do
+            if [[ -f "$file" ]]; then
+              # Esclude file ausiliari comuni di Electron Builder
+              if [[ "$file" != "elevate.exe" && \
+                    "$file" != "*.blockmap" && \
+                    "$file" != "*.yml" && \
+                    "$file" != "*.yaml" && \
+                    "$file" != "builder-*.yml" && \
+                    "$file" != "latest*.yml" ]]; then
+                
+                size=$(du -sh "$file" 2>/dev/null | cut -f1)
+                echo "  ✅ $file ($size)"
+              else
+                echo "  ⏭️ Skipping auxiliary file: $file"
               fi
             fi
           done
           cd ..
         fi
         
+        if [ -d "pkg-dist" ]; then
+          echo ""
+          echo "⚡ PKG standalone files:"
+          ls -la pkg-dist/
+        fi
+      shell: bash
+
+    - name: 📝 Smart rename artifacts
+      run: |
+        cd dist-electron
+        
+        # Rinomina solo il file principale dell'app
+        for file in *; do
+          if [[ -f "$file" ]]; then
+            # Identifica il file principale (più grande e non ausiliario)
+            if [[ "$file" != "elevate.exe" && \
+                  "$file" != *.blockmap && \
+                  "$file" != *.yml && \
+                  "$file" != *.yaml && \
+                  "$file" != builder-*.yml && \
+                  "$file" != latest*.yml ]]; then
+              
+              # Ottieni estensione
+              if [[ "$file" == *.* ]]; then
+                extension="${file##*.}"
+              else
+                extension=""
+              fi
+              
+              # Nuovo nome
+              if [[ -n "$extension" ]]; then
+                new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64.${extension}"
+              else
+                new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64"
+              fi
+              
+              if [[ "$file" != "$new_name" ]]; then
+                mv "$file" "$new_name"
+                echo "✅ Renamed main app: $file -> $new_name"
+              fi
+              
+              # Esci dopo aver trovato il file principale
+              break
+            fi
+          fi
+        done
+        
+        cd ..
+        
+        # Rinomina standalone se esistono
         if [ -d "pkg-dist" ]; then
           cd pkg-dist
           for file in *; do
@@ -156,20 +204,19 @@ jobs:
               new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64-standalone${extension}"
               if [[ "$file" != "$new_name" ]]; then
                 mv "$file" "$new_name"
-                echo "Renamed: $file -> $new_name"
+                echo "✅ Renamed standalone: $file -> $new_name"
               fi
             fi
           done
           cd ..
         fi
       shell: bash
-      continue-on-error: true
 
     - name: 📤 Upload Electron artifacts
       uses: actions/upload-artifact@v4
       with:
         name: electron-win-x64
-        path: dist-electron/*
+        path: dist-electron/${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64.*
         retention-days: 30
         if-no-files-found: warn
 
@@ -177,7 +224,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: pkg-win-x64
-        path: pkg-dist/*
+        path: pkg-dist/${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64-standalone.*
         retention-days: 30
         if-no-files-found: ignore
 
@@ -198,24 +245,30 @@ jobs:
       with:
         path: release-assets
 
-    - name: 📁 Organize release files
+    - name: 📁 Smart organize release files
       run: |
         mkdir -p final-release
         
+        echo "=== Organizing release files ==="
+        
+        # Copia solo i file principali rinominati (esclude ausiliari)
         find release-assets -type f \( \
-          -name "*.exe" -o \
-          -name "*.msi" -o \
-          -name "*-standalone*" \
+          -name "${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64.exe" -o \
+          -name "${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64-standalone.exe" -o \
+          -name "${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64.msi" \
         \) -exec cp {} final-release/ \;
         
-        echo "=== Files prepared for release ==="
-        ls -la final-release/ || echo "No files found"
-        
+        echo "=== Final release files ==="
         if [ "$(ls -A final-release/)" ]; then
+          ls -la final-release/
+          echo ""
           echo "=== File sizes ==="
           du -sh final-release/*
         else
           echo "⚠️ No files found for release"
+          
+          echo "=== Debug: All available files ==="
+          find release-assets -name "*.exe" -type f
         fi
 
     - name: 📝 Generate changelog
@@ -225,32 +278,35 @@ jobs:
         echo "" >> CHANGELOG.md
         echo "### 📦 Download" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "Download the executable for Windows:" >> CHANGELOG.md
+        echo "Choose the version that suits your needs:" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "| Type | File |" >> CHANGELOG.md
-        echo "|------|------|" >> CHANGELOG.md
-        echo "| 🪟 Portable App | \`InsuraTask-${{ needs.prepare.outputs.version }}-win-x64.exe\` |" >> CHANGELOG.md
-        echo "| 🪟 Standalone | \`InsuraTask-${{ needs.prepare.outputs.version }}-win-x64-standalone.exe\` |" >> CHANGELOG.md
+        echo "| Type | File | Description |" >> CHANGELOG.md
+        echo "|------|------|-------------|" >> CHANGELOG.md
+        echo "| 🖥️ **Desktop App** | \`${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64.exe\` | Full Electron app with UI |" >> CHANGELOG.md
+        echo "| ⚡ **Portable** | \`${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64-standalone.exe\` | Single executable |" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "### 🚀 Quick Start" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "1. **Download** the file for Windows" >> CHANGELOG.md
-        echo "2. **Run** the executable directly (no installation required)" >> CHANGELOG.md
+        echo "1. **Download** the preferred version" >> CHANGELOG.md
+        echo "2. **Run** the executable (no installation required)" >> CHANGELOG.md
         echo "3. **Enjoy** managing your insurance tasks!" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "### 📋 System Requirements" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "- **Windows**: Windows 10+ (64-bit)" >> CHANGELOG.md
+        echo "- **OS**: Windows 10+ (64-bit)" >> CHANGELOG.md
+        echo "- **RAM**: 4GB+ recommended" >> CHANGELOG.md
+        echo "- **Disk**: 200MB free space" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "### 🔧 Known Issues Fixed" >> CHANGELOG.md
+        echo "### ✨ What's New" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "- ✅ Fixed ES Module compatibility issue in standalone builds" >> CHANGELOG.md
-        echo "- ✅ Improved build process for better compatibility" >> CHANGELOG.md
-        echo "- ✅ Enhanced error handling and debugging" >> CHANGELOG.md
+        echo "- ✅ Improved build process - no more auxiliary files" >> CHANGELOG.md
+        echo "- ✅ Cleaner releases with only main executables" >> CHANGELOG.md
+        echo "- ✅ Enhanced Windows compatibility" >> CHANGELOG.md
+        echo "- ✅ Better error handling and logging" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "### 🐛 Issues?" >> CHANGELOG.md
+        echo "### 🐛 Report Issues" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "Report bugs at: https://github.com/FDRFSR/insuratask/issues" >> CHANGELOG.md
+        echo "Found a bug? [Create an issue](https://github.com/${{ github.repository }}/issues)" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "---" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
@@ -274,11 +330,13 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: ✅ Release completed
+    - name: ✅ Release Summary
       run: |
         echo "🎉 Release v${{ needs.prepare.outputs.version }} created successfully!"
         echo ""
-        echo "📦 Files released:"
+        echo "📦 Files included in release:"
         ls -la final-release/ || echo "No files found"
         echo ""
         echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ needs.prepare.outputs.tag }}"
+        echo ""
+        echo "📝 Only main application files are included (no auxiliary files like elevate.exe)"

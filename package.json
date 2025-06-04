@@ -131,59 +131,65 @@
       {
         "from": "node_modules/express",
         "to": "node_modules/express",
-        "filter": [
-          "**/*"
-        ]
+        "filter": ["**/*"]
       },
       {
         "from": "node_modules/better-sqlite3",
         "to": "node_modules/better-sqlite3",
-        "filter": [
-          "**/*"
-        ]
+        "filter": ["**/*"]
       }
     ],
     "extraResources": [
       {
         "from": "dist/public",
         "to": "static",
-        "filter": [
-          "**/*"
-        ]
+        "filter": ["**/*"]
       }
     ],
     "win": {
       "target": [
         {
           "target": "portable",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
       ],
-      "requestedExecutionLevel": "asInvoker"
+      "requestedExecutionLevel": "asInvoker",
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+      "verifyUpdateCodeSignature": false,
+      "publisherName": "Federico Fusarri"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-${os}-${arch}-portable.${ext}",
+      "requestExecutionLevel": "user",
+      "unpackDirName": "${productName}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "artifactName": "${productName}-${version}-${os}-${arch}-installer.${ext}"
     },
     "mac": {
       "category": "public.app-category.business",
       "target": [
         {
           "target": "dmg",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
-      ]
+      ],
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     },
     "linux": {
       "target": [
         {
           "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
       ],
-      "category": "Office"
+      "category": "Office",
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     },
     "publish": {
       "provider": "github",
