@@ -5,10 +5,10 @@
   "license": "MIT",
   "description": "Gestione attività per agenti assicurativi",
   "author": "Federico Fusarri <iscrizioni.fusarri@gmail.com>",
-  "homepage": "https://github.com/FDRFSR/insuratask",
+  "homepage": "https://github.com/FDRFSR/insurance-daily-tracker",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FDRFSR/insuratask.git"
+    "url": "https://github.com/FDRFSR/insurance-daily-tracker.git"
   },
   "main": "electron/main.cjs",
   "bin": {
@@ -16,12 +16,15 @@
   },
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
+    "dev:win": "set NODE_ENV=development && tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
+    "start:win": "set NODE_ENV=production && node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "electron": "electron .",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5000 && electron .\"",
+    "electron:dev:win": "concurrently \"npm run dev:win\" \"wait-on http://localhost:5000 && electron .\"",
     "electron:pack": "electron-builder --dir",
     "electron:dist": "npm run build && electron-builder --publish=never",
     "electron:publish": "npm run build && electron-builder --publish=always",
@@ -32,7 +35,8 @@
     "release:patch": "npm version patch && git push && git push --tags",
     "release:minor": "npm version minor && git push && git push --tags",
     "release:major": "npm version major && git push && git push --tags",
-    "electron:dev:safe": "NODE_ENV=development concurrently \"npm run dev\" \"wait-on http://localhost:5000 && electron --no-sandbox .\""
+    "electron:dev:safe": "NODE_ENV=development concurrently \"npm run dev\" \"wait-on http://localhost:5000 && electron --no-sandbox .\"",
+    "electron:dev:safe:win": "set NODE_ENV=development && concurrently \"npm run dev:win\" \"wait-on http://localhost:5000 && electron --no-sandbox .\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

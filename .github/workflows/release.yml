@@ -1,10 +1,10 @@
-name: 🚀 Build and Release InsuraTask
+name: 🚀 Build Windows InsuraTask
 
 on:
   push:
     tags:
-      - 'v*.*.*'  # Triggerato sui tag versioni (es: v1.0.0)
-  workflow_dispatch:  # Permette esecuzione manuale
+      - 'v*.*.*'
+  workflow_dispatch:
     inputs:
       version:
         description: 'Version to release (es: 1.0.0)'
@@ -16,7 +16,6 @@ env:
   PRODUCT_NAME: 'InsuraTask'
 
 jobs:
-  # Job per preparare le informazioni di build
   prepare:
     name: 📋 Prepare Build Info
     runs-on: ubuntu-latest
@@ -42,28 +41,10 @@ jobs:
         echo "tag=${TAG}" >> $GITHUB_OUTPUT
         echo "🏷️ Building version: ${VERSION} (tag: ${TAG})"
 
-  # Job principale per build multipiattaforma
-  build:
-    name: 🔨 Build ${{ matrix.os }}
+  build-windows:
+    name: 🔨 Build Windows
     needs: prepare
-    runs-on: ${{ matrix.os }}
-    
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux
-            arch: x64
-            artifact_suffix: linux-x64
-          - os: windows-latest
-            platform: win32
-            arch: x64
-            artifact_suffix: win-x64
-          - os: macos-latest
-            platform: darwin
-            arch: x64
-            artifact_suffix: macos-x64
+    runs-on: windows-latest
     
     steps:
     - name: 📂 Checkout repository
@@ -75,22 +56,11 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
 
-    # 🔧 Installazione migliorata delle dipendenze
     - name: 🔧 Install dependencies
       run: |
-        echo "Installing dependencies..."
-        
-        # Rimuovi node_modules per evitare conflitti
         rm -rf node_modules package-lock.json || true
-        
-        # Installa dipendenze
         npm install
-        
-        # Rebuild specifici per i moduli nativi
         npm rebuild better-sqlite3
-        
-        # Verifica l'installazione
-        echo "✅ Dependencies installed successfully"
       shell: bash
 
     - name: 🔍 Type check
@@ -101,29 +71,18 @@ jobs:
       env:
         CI: true
 
-    # 🖥️ Build Electron
     - name: 🖥️ Build Electron app
       run: npm run electron:dist
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         ELECTRON_CACHE: .cache/electron
         ELECTRON_BUILDER_CACHE: .cache/electron-builder
-        # Disabilita code signing e icone
         CSC_IDENTITY_AUTO_DISCOVERY: false
-        DEBUG: electron-builder
 
-    # ⚡ Build CommonJS per pkg (migliore compatibilità)
     - name: 🔧 Build CommonJS for standalone
       run: |
-        echo "Building CommonJS version for standalone..."
-        
-        # Crea directory necessarie
         mkdir -p dist-pkg/public
-        
-        # Copia file statici per il pkg
         cp -r dist/public/* dist-pkg/public/ || echo "No static files to copy"
-        
-        # Transpila server usando esbuild per CommonJS
         npx esbuild server/standalone-complete.ts \
           --platform=node \
           --target=node18 \
@@ -143,39 +102,16 @@ jobs:
           --external:recharts/* \
           --packages=external \
           --minify
-        
-        echo "✅ CommonJS build completed"
       shell: bash
       continue-on-error: true
 
-    # ⚡ Build standalone con lo script dedicato
     - name: ⚡ Build standalone binaries
       run: |
-        echo "Building standalone binary for ${{ matrix.platform }}..."
-        
-        # Prova prima con lo script dedicato
-        if [ -f "standalone-build.js" ]; then
-          node standalone-build.js
-        elif [ -f "scripts/build-pkg.cjs" ]; then
-          node scripts/build-pkg.cjs
-        else
-          # Fallback al pkg diretto usando il file CommonJS
-          mkdir -p pkg-dist
-          
-          if [[ "${{ matrix.platform }}" == "win32" ]]; then
-            npx pkg dist-pkg/standalone-complete.js --targets=node18-win-x64 --output=pkg-dist/insuratask-${{ matrix.platform }}-standalone.exe
-          elif [[ "${{ matrix.platform }}" == "darwin" ]]; then
-            npx pkg dist-pkg/standalone-complete.js --targets=node18-macos-x64 --output=pkg-dist/insuratask-${{ matrix.platform }}-standalone
-          else
-            npx pkg dist-pkg/standalone-complete.js --targets=node18-linux-x64 --output=pkg-dist/insuratask-${{ matrix.platform }}-standalone
-          fi
-        fi
-        
-        echo "✅ Standalone binary build completed"
+        mkdir -p pkg-dist
+        npx pkg dist-pkg/standalone-complete.js --targets=node18-win-x64 --output=pkg-dist/insuratask-win32-standalone.exe
       shell: bash
       continue-on-error: true
 
-    # 📋 Elenca file generati per debug
     - name: 📋 List generated files
       run: |
         echo "=== Build output summary ==="
@@ -183,48 +119,25 @@ jobs:
         
         if [ -d "dist-electron" ]; then
           echo "📦 Electron build output:"
-          echo "dist-electron directory exists ✅"
           du -sh dist-electron 2>/dev/null || echo "Could not get size"
-          echo "Files:"
           ls -la dist-electron/ 2>/dev/null || echo "Could not list files"
-        else
-          echo "❌ No dist-electron directory found"
         fi
         
         if [ -d "pkg-dist" ]; then
           echo "⚡ PKG build output:" 
-          echo "pkg-dist directory exists ✅"
           du -sh pkg-dist 2>/dev/null || echo "Could not get size"
-          echo "Files:"
           ls -la pkg-dist/ 2>/dev/null || echo "Could not list files"
-        else
-          echo "❌ No pkg-dist directory found"
-        fi
-        
-        # Controlla anche dist-pkg
-        if [ -d "dist-pkg" ]; then
-          echo "🔧 PKG CommonJS build output:"
-          echo "dist-pkg directory exists ✅"
-          du -sh dist-pkg 2>/dev/null || echo "Could not get size"
-          echo "Files:"
-          ls -la dist-pkg/ 2>/dev/null || echo "Could not list files"
-        else
-          echo "❌ No dist-pkg directory found"
         fi
       shell: bash
 
-    # 📝 Rinomina file con pattern consistente
     - name: 📝 Rename artifacts
       run: |
-        echo "Renaming artifacts for consistency..."
-        
-        # Rinomina file Electron
         if [ -d "dist-electron" ]; then
           cd dist-electron
           for file in *.*; do
             if [[ -f "$file" && "$file" != *.yml && "$file" != *.yaml ]]; then
               extension="${file##*.}"
-              new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-${{ matrix.artifact_suffix }}.${extension}"
+              new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64.${extension}"
               if [[ "$file" != "$new_name" ]]; then
                 mv "$file" "$new_name"
                 echo "Renamed: $file -> $new_name"
@@ -234,14 +147,13 @@ jobs:
           cd ..
         fi
         
-        # Rinomina binari PKG
         if [ -d "pkg-dist" ]; then
           cd pkg-dist
           for file in *; do
             if [[ -f "$file" ]]; then
               extension=""
               [[ "$file" == *.* ]] && extension=".${file##*.}"
-              new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-${{ matrix.artifact_suffix }}-standalone${extension}"
+              new_name="${{ env.PRODUCT_NAME }}-${{ needs.prepare.outputs.version }}-win-x64-standalone${extension}"
               if [[ "$file" != "$new_name" ]]; then
                 mv "$file" "$new_name"
                 echo "Renamed: $file -> $new_name"
@@ -253,28 +165,25 @@ jobs:
       shell: bash
       continue-on-error: true
 
-    # 📤 Upload Electron artifacts
     - name: 📤 Upload Electron artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: electron-${{ matrix.artifact_suffix }}
+        name: electron-win-x64
         path: dist-electron/*
         retention-days: 30
         if-no-files-found: warn
 
-    # 📤 Upload PKG artifacts
     - name: 📤 Upload PKG artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: pkg-${{ matrix.artifact_suffix }}
+        name: pkg-win-x64
         path: pkg-dist/*
         retention-days: 30
         if-no-files-found: ignore
 
-  # Job per creare la release GitHub
   release:
     name: 🎉 Create GitHub Release
-    needs: [prepare, build]
+    needs: [prepare, build-windows]
     runs-on: ubuntu-latest
     if: success()
     
@@ -284,30 +193,18 @@ jobs:
       with:
         fetch-depth: 0
 
-    # 📥 Download tutti gli artifacts
     - name: 📥 Download all artifacts
       uses: actions/download-artifact@v4
       with:
         path: release-assets
 
-    # 📁 Organizza i file per la release
     - name: 📁 Organize release files
       run: |
         mkdir -p final-release
         
-        echo "=== Organizing release files ==="
-        
-        # Trova e sposta tutti gli eseguibili
         find release-assets -type f \( \
           -name "*.exe" -o \
           -name "*.msi" -o \
-          -name "*.dmg" -o \
-          -name "*.pkg" -o \
-          -name "*.AppImage" -o \
-          -name "*.deb" -o \
-          -name "*.rpm" -o \
-          -name "*.tar.gz" -o \
-          -name "*.zip" -o \
           -name "*-standalone*" \
         \) -exec cp {} final-release/ \;
         
@@ -321,7 +218,6 @@ jobs:
           echo "⚠️ No files found for release"
         fi
 
-    # 📝 Genera changelog
     - name: 📝 Generate changelog
       id: changelog
       run: |
@@ -329,35 +225,28 @@ jobs:
         echo "" >> CHANGELOG.md
         echo "### 📦 Download" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "Download the executable for your platform:" >> CHANGELOG.md
+        echo "Download the executable for Windows:" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "| Platform | Type | File |" >> CHANGELOG.md
-        echo "|----------|------|------|" >> CHANGELOG.md
-        echo "| 🪟 Windows | Portable App | \`InsuraTask-${{ needs.prepare.outputs.version }}-win-x64.exe\` |" >> CHANGELOG.md
-        echo "| 🪟 Windows | Standalone | \`InsuraTask-${{ needs.prepare.outputs.version }}-win-x64-standalone.exe\` |" >> CHANGELOG.md
-        echo "| 🍎 macOS | DMG Installer | \`InsuraTask-${{ needs.prepare.outputs.version }}-macos-x64.dmg\` |" >> CHANGELOG.md
-        echo "| 🍎 macOS | Standalone | \`InsuraTask-${{ needs.prepare.outputs.version }}-macos-x64-standalone\` |" >> CHANGELOG.md
-        echo "| 🐧 Linux | AppImage | \`InsuraTask-${{ needs.prepare.outputs.version }}-linux-x64.AppImage\` |" >> CHANGELOG.md
-        echo "| 🐧 Linux | Standalone | \`InsuraTask-${{ needs.prepare.outputs.version }}-linux-x64-standalone\` |" >> CHANGELOG.md
+        echo "| Type | File |" >> CHANGELOG.md
+        echo "|------|------|" >> CHANGELOG.md
+        echo "| 🪟 Portable App | \`InsuraTask-${{ needs.prepare.outputs.version }}-win-x64.exe\` |" >> CHANGELOG.md
+        echo "| 🪟 Standalone | \`InsuraTask-${{ needs.prepare.outputs.version }}-win-x64-standalone.exe\` |" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "### 🚀 Quick Start" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
-        echo "1. **Download** the file for your operating system" >> CHANGELOG.md
-        echo "2. **Run** the executable directly (no installation required for standalone versions)" >> CHANGELOG.md
+        echo "1. **Download** the file for Windows" >> CHANGELOG.md
+        echo "2. **Run** the executable directly (no installation required)" >> CHANGELOG.md
         echo "3. **Enjoy** managing your insurance tasks!" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "### 📋 System Requirements" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "- **Windows**: Windows 10+ (64-bit)" >> CHANGELOG.md
-        echo "- **macOS**: macOS 10.15+ (Catalina)" >> CHANGELOG.md
-        echo "- **Linux**: Ubuntu 18.04+ / equivalent" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "### 🔧 Known Issues Fixed" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "- ✅ Fixed ES Module compatibility issue in standalone builds" >> CHANGELOG.md
         echo "- ✅ Improved build process for better compatibility" >> CHANGELOG.md
         echo "- ✅ Enhanced error handling and debugging" >> CHANGELOG.md
-        echo "- ✅ Fixed native module issues on different platforms" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
         echo "### 🐛 Issues?" >> CHANGELOG.md
         echo "" >> CHANGELOG.md
@@ -367,12 +256,10 @@ jobs:
         echo "" >> CHANGELOG.md
         echo "*Built with ❤️ by [Federico Fusarri](https://github.com/FDRFSR)*" >> CHANGELOG.md
         
-        # Output per GitHub
         echo "changelog<<EOF" >> $GITHUB_OUTPUT
         cat CHANGELOG.md >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
 
-    # 🎉 Crea la release GitHub
     - name: 🎉 Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
@@ -387,7 +274,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # ✅ Notifica successo
     - name: ✅ Release completed
       run: |
         echo "🎉 Release v${{ needs.prepare.outputs.version }} created successfully!"

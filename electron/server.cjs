@@ -1,4 +1,4 @@
-// electron-server-updated.cjs - Server completo per Electron con tutte le API
+// electron-server.cjs - Server completo per Electron con tutte le API
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -220,17 +220,51 @@ function createElectronServer(staticPath, logger = console.log) {
     res.status(status).json({ message: err.message || "Internal Server Error" });
   });
 
-  // Chiudi il database quando il server viene chiuso
-  const originalClose = app.close;
-  app.close = function(...args) {
-    try {
-      storage.close();
-      logger('[ElectronServer] Database connection closed during server shutdown');
-    } catch (e) {
-      logger(`[ElectronServer] Error closing database: ${e.message}`);
-    }
-    return originalClose.apply(this, args);
+  // Aggiungi tracking dello stato di chiusura
+  let isClosing = false;
+
+  // Crea una funzione per creare server con gestione della chiusura
+  const createServerWithCleanup = (port = 0, host = 'localhost') => {
+    const server = app.listen(port, host);
+    
+    // Aggiungi gestione della chiusura
+    server.on('close', () => {
+      if (!isClosing) {
+        isClosing = true;
+        logger('[ElectronServer] Server shutting down - closing database connections');
+        
+        // Forza la chiusura di tutte le connessioni al database
+        try {
+          // Chiudi esplicitamente il database prima della chiusura del server
+          storage.close();
+        } catch (err) {
+          logger(`[ElectronServer] Error closing database: ${err.message}`);
+        }
+      }
+    });
+    
+    // Aggiungi funzione di chiusura migliorata
+    const originalClose = server.close;
+    server.close = function(callback) {
+      logger('[ElectronServer] Server close requested');
+      isClosing = true;
+      
+      // Chiudi connessioni al database prima
+      try {
+        storage.close();
+      } catch (e) {
+        logger(`[ElectronServer] Error closing database during server shutdown: ${e.message}`);
+      }
+      
+      // Poi chiudi il server
+      return originalClose.call(this, callback);
+    };
+    
+    return server;
   };
+  
+  // Esponi funzione per creare server
+  app.createServer = createServerWithCleanup;
 
   return app;
 }

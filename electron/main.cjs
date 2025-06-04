@@ -11,7 +11,7 @@ const log = (message) => {
   // Log su file per debug Windows
   if (process.platform === 'win32') {
     try {
-      const logPath = path.join(process.cwd(), 'insuratask-debug.log');
+      const logPath = path.join(app.getPath('userData'), 'insuratask-debug.log');
       fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
     } catch (e) {
       // Ignora errori scrittura log
@@ -30,7 +30,8 @@ let localServer = null;
 log(`[Electron] Mode: ${isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'}`);
 log(`[Electron] Platform: ${process.platform}`);
 log(`[Electron] App path: ${app.getAppPath()}`);
-log(`[Electron] Resources path: ${process.resourcesPath}`);
+log(`[Electron] User data path: ${app.getPath('userData')}`);
+log(`[Electron] Resources path: ${process.resourcesPath || 'not available'}`);
 
 // 🎯 TROVA FILE STATICI con logging migliorato
 function findStaticFiles() {
@@ -38,17 +39,21 @@ function findStaticFiles() {
     // Development
     path.join(__dirname, '..', 'dist', 'public'),
     
+    // Windows-specific paths
+    path.join(process.env.LOCALAPPDATA || '', 'insuratask', 'resources', 'static'),
+    path.join(process.env.USERPROFILE || '', 'AppData', 'Local', 'insuratask', 'resources', 'static'),
+    
     // Production - extraResources  
-    path.join(process.resourcesPath, 'static'),
+    path.join(process.resourcesPath || '', 'static'),
     
     // Production - standard
-    path.join(process.resourcesPath, 'app', 'dist', 'public'),
+    path.join(process.resourcesPath || '', 'app', 'dist', 'public'),
     path.join(app.getAppPath(), 'dist', 'public'),
     path.join(__dirname, '..', 'dist', 'public'),
     
     // Backup paths
     path.join(__dirname, 'dist', 'public'),
-    path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'public'),
+    path.join(process.resourcesPath || '', 'app.asar.unpacked', 'dist', 'public'),
   ];
 
   log('[Electron] 🔍 Searching for static files...');
@@ -83,7 +88,7 @@ function findStaticFiles() {
   // Debug: lista directory disponibili
   log('[Electron] 🔍 Available directories:');
   try {
-    if (fs.existsSync(process.resourcesPath)) {
+    if (process.resourcesPath && fs.existsSync(process.resourcesPath)) {
       const resourceFiles = fs.readdirSync(process.resourcesPath);
       log(`[Electron] Resources: ${resourceFiles.join(', ')}`);
     }
@@ -149,7 +154,9 @@ Static path attempted: ${staticPath || 'none found'}`;
       log('[Electron] ✅ Express app created with full API support');
       
       // Avvia server su porta casuale
-      const server = expressApp.listen(0, 'localhost', () => {
+      const server = expressApp.createServer(0, 'localhost');
+      
+      server.on('listening', () => {
         const port = server.address().port;
         log(`[Electron] ✅ Local server started on http://localhost:${port}`);
         log(`[Electron] Static files served from: ${staticPath}`);
@@ -324,7 +331,7 @@ function getAppIcon() {
   const iconPaths = [
     path.join(__dirname, 'assets', 'icon.png'),
     path.join(__dirname, '..', 'electron', 'assets', 'icon.png'),
-    path.join(process.resourcesPath, 'assets', 'icon.png')
+    path.join(process.resourcesPath || '', 'assets', 'icon.png')
   ];
   
   for (const iconPath of iconPaths) {
@@ -344,14 +351,14 @@ async function showErrorDialog(error) {
     type: 'error',
     title: 'Errore Avvio InsuraTask',
     message: 'Impossibile avviare l\'applicazione',
-    detail: `${error.message}\n\nFile di log: insuratask-debug.log`,
+    detail: `${error.message}\n\nFile di log: ${app.getPath('userData')}/insuratask-debug.log`,
     buttons: ['Esci', 'Mostra Log', 'Apri Cartella'],
     defaultId: 0
   });
   
   if (response.response === 1) {
     // Mostra log
-    const logPath = path.join(process.cwd(), 'insuratask-debug.log');
+    const logPath = path.join(app.getPath('userData'), 'insuratask-debug.log');
     shell.openPath(logPath);
   } else if (response.response === 2) {
     // Apri cartella app
@@ -470,10 +477,10 @@ function showErrorWindow(error) {
         </div>
         
         <button onclick="location.reload()">🔄 Riprova</button>
-        <button onclick="require('electron').shell.openPath('${process.cwd()}')">📁 Apri Cartella</button>
+        <button onclick="require('electron').shell.openPath('${app.getPath('userData')}')">📁 Apri Cartella</button>
         
         <div class="version">
-          InsuraTask v1.0.9 | Platform: ${process.platform} | Mode: ${isDevelopment ? 'Development' : 'Production'}
+          InsuraTask v1.0.10 | Platform: ${process.platform} | Mode: ${isDevelopment ? 'Development' : 'Production'}
         </div>
       </div>
     </body>
@@ -542,7 +549,7 @@ function setupMenu() {
             dialog.showMessageBox(mainWindow, {
               type: 'info',
               title: 'InsuraTask',
-              message: 'InsuraTask v1.0.9',
+              message: 'InsuraTask v1.0.10',
               detail: '🛡️ Gestione attività per agenti assicurativi\n\n👨‍💻 Sviluppato da Federico Fusarri\n🌐 https://github.com/FDRFSR/insuratask',
               buttons: ['OK']
             });
@@ -551,7 +558,7 @@ function setupMenu() {
         {
           label: 'Apri Log Debug',
           click: () => {
-            const logPath = path.join(process.cwd(), 'insuratask-debug.log');
+            const logPath = path.join(app.getPath('userData'), 'insuratask-debug.log');
             shell.openPath(logPath);
           }
         },
@@ -595,10 +602,37 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
-  log('[Electron] 🔚 App quitting - cleanup');
-  if (localServer) {
-    localServer.close();
+  log('[Electron] 🔚 App quitting - cleaning up database');
+  
+  // Chiusura sicura del database
+  try {
+    if (localServer) {
+      // Invia segnale di chiusura al server
+      log('[Electron] Closing local server...');
+      localServer.close();
+    }
+    
+    // Attendi che le operazioni in corso terminino
+    log('[Electron] Waiting for pending operations...');
+    setTimeout(() => {
+      log('[Electron] Forced exit after timeout');
+      process.exit(0);
+    }, 2000); // Timeout di sicurezza su Windows
+  } catch (error) {
+    log(`[Electron] Error during shutdown: ${error.message}`);
+    process.exit(1);
   }
+});
+
+// Gestione di SIGINT/SIGTERM più robusta per Windows
+process.on('SIGINT', () => {
+  log('[Electron] SIGINT received, initiating graceful shutdown');
+  app.quit();
+});
+
+process.on('SIGTERM', () => {
+  log('[Electron] SIGTERM received, initiating graceful shutdown');
+  app.quit();
 });
 
 // ❌ GESTIONE ERRORI CRITICI
