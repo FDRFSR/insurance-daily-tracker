@@ -5,27 +5,32 @@
   "license": "MIT",
   "description": "Gestione attività per agenti assicurativi",
   "author": "Federico Fusarri <iscrizioni.fusarri@gmail.com>",
-  "homepage": "https://github.com/FDRFSR/insurance-daily-tracker",
+  "homepage": "https://github.com/FDRFSR/insuratask",
   "repository": {
     "type": "git",
-    "url": "https://github.com/FDRFSR/insurance-daily-tracker.git"
+    "url": "https://github.com/FDRFSR/insuratask.git"
   },
   "main": "electron/main.cjs",
   "bin": {
     "insuratask": "dist/index.js"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "dev": "NODE_ENV=development tsx server/index.ts",
-    "dev:win": "set NODE_ENV=development && tsx server/index.ts",
+    "dev": "cross-env NODE_ENV=development tsx server/index.ts",
+    "dev:win": "cross-env NODE_ENV=development tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
-    "start": "NODE_ENV=production node dist/index.js",
-    "start:win": "set NODE_ENV=production && node dist/index.js",
+    "start": "cross-env NODE_ENV=production node dist/index.js",
+    "start:win": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "electron": "electron .",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5000 && electron .\"",
     "electron:dev:win": "concurrently \"npm run dev:win\" \"wait-on http://localhost:5000 && electron .\"",
+    "electron:dev:safe": "cross-env NODE_ENV=development concurrently \"npm run dev\" \"wait-on http://localhost:5000 && electron --no-sandbox .\"",
+    "electron:dev:safe:win": "cross-env NODE_ENV=development concurrently \"npm run dev:win\" \"wait-on http://localhost:5000 && electron --no-sandbox .\"",
     "electron:pack": "electron-builder --dir",
     "electron:dist": "npm run build && electron-builder --publish=never",
     "electron:publish": "npm run build && electron-builder --publish=always",
@@ -35,9 +40,7 @@
     "pkg:linux": "npm run build && pkg . --targets node18-linux-x64 --out-path pkg-dist",
     "release:patch": "npm version patch && git push && git push --tags",
     "release:minor": "npm version minor && git push && git push --tags",
-    "release:major": "npm version major && git push && git push --tags",
-    "electron:dev:safe": "NODE_ENV=development concurrently \"npm run dev\" \"wait-on http://localhost:5000 && electron --no-sandbox .\"",
-    "electron:dev:safe:win": "set NODE_ENV=development && concurrently \"npm run dev:win\" \"wait-on http://localhost:5000 && electron --no-sandbox .\""
+    "release:major": "npm version major && git push && git push --tags"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -80,9 +83,9 @@
     "express": "^4.21.2",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.453.0",
-    "react": "^18.3.1",
+    "react": "^18.2.0",
     "react-day-picker": "^8.10.1",
-    "react-dom": "^18.3.1",
+    "react-dom": "^18.2.0",
     "react-hook-form": "^7.55.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "^2.15.2",
@@ -100,11 +103,12 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/express": "^4.17.21",
     "@types/node": "^20.17.57",
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "^18.2.47",
+    "@types/react-dom": "^18.2.20",
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
     "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "drizzle-kit": "^0.30.4",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
@@ -127,38 +131,20 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "package.json",
-      {
-        "from": "node_modules/express",
-        "to": "node_modules/express",
-        "filter": [
-          "**/*"
-        ]
-      },
-      {
-        "from": "node_modules/better-sqlite3",
-        "to": "node_modules/better-sqlite3",
-        "filter": [
-          "**/*"
-        ]
-      }
+      "package.json"
     ],
     "extraResources": [
       {
         "from": "dist/public",
         "to": "static",
-        "filter": [
-          "**/*"
-        ]
+        "filter": [ "**/*" ]
       }
     ],
     "win": {
       "target": [
         {
           "target": "portable",
-          "arch": [
-            "x64"
-          ]
+          "arch": [ "x64" ]
         }
       ],
       "requestedExecutionLevel": "asInvoker"
@@ -179,9 +165,7 @@
       "target": [
         {
           "target": "dmg",
-          "arch": [
-            "x64"
-          ]
+          "arch": [ "x64" ]
         }
       ]
     },
@@ -189,9 +173,7 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
+          "arch": [ "x64" ]
         }
       ],
       "category": "Office"
