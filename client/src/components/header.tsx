@@ -181,7 +181,11 @@ export default function Header() {
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-0" align="end">
+              <PopoverContent 
+                className="w-80 p-0 border border-[var(--border)] rounded-2xl shadow-[0_4px_24px_0_rgba(0,0,0,0.08)] bg-white/95"
+                align="end"
+                style={{ borderColor: 'var(--border, #E7E5E4)', background: 'rgba(255,255,255,0.95)', boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)' }}
+              >
                 <div className="p-4 border-b border-gray-200">
                   <h3 className="font-semibold text-gray-900">Notifiche</h3>
                   {totalNotifications > 0 && (
@@ -199,55 +203,59 @@ export default function Header() {
                   ) : (
                     <div className="divide-y divide-gray-100">
                       {urgentTasks.map((task) => (
-                        <div key={`overdue-${task.id}`} className="p-3 hover:bg-red-50 group">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
-                              <p className="text-xs text-red-600 font-medium">IN RITARDO</p>
-                              {task.client && (
-                                <p className="text-xs text-gray-600">Cliente: {task.client}</p>
-                              )}
-                            </div>
-                            <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                                onClick={(e) => handleDismissNotification(task.id, e)}
-                                title="Nascondi notifica"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
+                        <div
+                          key={`overdue-${task.id}`}
+                          className="flex items-start space-x-3 p-4 mb-2 bg-white/95 border border-[var(--border)] rounded-2xl shadow-[0_4px_24px_0_rgba(0,0,0,0.08)] hover:bg-red-50 transition-all duration-200 group relative"
+                          style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)', borderColor: 'var(--border, #E7E5E4)', background: 'rgba(255,255,255,0.95)' }}
+                        >
+                          <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{task.title}</p>
+                            <p className="text-xs text-red-600 font-medium">IN RITARDO</p>
+                            {task.client && (
+                              <p className="text-xs text-gray-600">Cliente: {task.client}</p>
+                            )}
+                          </div>
+                          <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full focus:ring-2 focus:ring-blue-200"
+                              onClick={(e) => handleDismissNotification(task.id, e)}
+                              title="Nascondi notifica"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       ))}
                       
                       {todayTasks.map((task) => (
-                        <div key={`today-${task.id}`} className="p-3 hover:bg-orange-50 group">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
-                              <p className="text-xs text-orange-600 font-medium">
-                                OGGI {formatTime(task.dueTime)}
-                              </p>
-                              {task.client && (
-                                <p className="text-xs text-gray-600">Cliente: {task.client}</p>
-                              )}
-                            </div>
-                            <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                                onClick={(e) => handleDismissNotification(task.id, e)}
-                                title="Nascondi notifica"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
+                        <div
+                          key={`today-${task.id}`}
+                          className="flex items-start space-x-3 p-4 mb-2 bg-white/95 border border-[var(--border)] rounded-2xl shadow-[0_4px_24px_0_rgba(0,0,0,0.08)] hover:bg-blue-50 transition-all duration-200 group relative"
+                          style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)', borderColor: 'var(--border, #E7E5E4)', background: 'rgba(255,255,255,0.95)' }}
+                        >
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">{task.title}</p>
+                            <p className="text-xs text-blue-600 font-medium">
+                              OGGI {formatTime(task.dueTime)}
+                            </p>
+                            {task.client && (
+                              <p className="text-xs text-gray-600">Cliente: {task.client}</p>
+                            )}
+                          </div>
+                          <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full focus:ring-2 focus:ring-blue-200"
+                              onClick={(e) => handleDismissNotification(task.id, e)}
+                              title="Nascondi notifica"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       ))}

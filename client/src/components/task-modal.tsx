@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Task } from "@shared/schema";
 
@@ -186,7 +185,6 @@ export default function TaskModal({
     dueTime: "",
   });
 
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -232,18 +230,9 @@ export default function TaskModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tasks/stats"] });
-      toast({
-        title: "Successo",
-        description: "Attività creata con successo",
-      });
       onClose();
     },
     onError: (error: any) => {
-      toast({
-        title: "Errore",
-        description: error?.message || "Impossibile creare l'attività",
-        variant: "destructive",
-      });
     },
   });
 
@@ -254,18 +243,9 @@ export default function TaskModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tasks/stats"] });
-      toast({
-        title: "Successo",
-        description: "Attività aggiornata con successo",
-      });
       onClose();
     },
     onError: (error: any) => {
-      toast({
-        title: "Errore",
-        description: error?.message || "Impossibile aggiornare l'attività",
-        variant: "destructive",
-      });
     },
   });
 
@@ -273,20 +253,10 @@ export default function TaskModal({
     e.preventDefault();
     
     if (!formData.title.trim()) {
-      toast({
-        title: "Errore",
-        description: "Il titolo è obbligatorio",
-        variant: "destructive",
-      });
       return;
     }
 
     if (!formData.category) {
-      toast({
-        title: "Errore",
-        description: "La categoria è obbligatoria",
-        variant: "destructive",
-      });
       return;
     }
 
@@ -388,7 +358,7 @@ export default function TaskModal({
               required
               autoFocus={!preselectedCategory && !preselectedDate}
               className="w-full border border-[var(--border)] focus:border-[var(--ring)] rounded-full bg-white text-gray-900 shadow-none transition-all duration-150"
-              style={{ borderColor: 'var(--border, #E7E5E4)', borderStyle: 'solid', outline: 'none', boxShadow: 'none' }}
+              style={{ borderColor: 'var(--border, #E7E5E4)' }}
             />
           </div>
 
@@ -422,7 +392,7 @@ export default function TaskModal({
               placeholder="Nome del cliente..."
               autoFocus={!!preselectedCategory || !!preselectedDate}
               className="w-full border border-[var(--border)] focus:border-[var(--ring)] rounded-full bg-white text-gray-900 shadow-none transition-all duration-150"
-              style={{ borderColor: 'var(--border, #E7E5E4)', borderStyle: 'solid', outline: 'none', boxShadow: 'none' }}
+              style={{ borderColor: 'var(--border, #E7E5E4)' }}
             />
           </div>
 
@@ -437,7 +407,7 @@ export default function TaskModal({
               placeholder="Descrizione dettagliata dell'attività..."
               rows={3}
               className="w-full resize-none border border-[var(--border)] focus:border-[var(--ring)] rounded-2xl bg-white text-gray-900 shadow-none transition-all duration-150"
-              style={{ borderColor: 'var(--border, #E7E5E4)', borderStyle: 'solid', outline: 'none', boxShadow: 'none' }}
+              style={{ borderColor: 'var(--border, #E7E5E4)' }}
             />
           </div>
 
@@ -452,7 +422,7 @@ export default function TaskModal({
                 value={formData.dueDate}
                 onChange={(e) => handleInputChange("dueDate", e.target.value)}
                 className={`w-full border border-[var(--border)] focus:border-[var(--ring)] rounded-full bg-white text-gray-900 shadow-none transition-all duration-150 ${preselectedDate ? 'ring-2 ring-green-200 border-green-300' : ''}`}
-                style={{ borderColor: 'var(--border, #E7E5E4)', outline: 'none', boxShadow: 'none' }}
+                style={{ borderColor: 'var(--border, #E7E5E4)' }}
               />
               {preselectedDate && (
                 <p className="text-xs text-green-600 mt-1">
@@ -470,7 +440,7 @@ export default function TaskModal({
                 value={formData.dueTime}
                 onChange={(e) => handleInputChange("dueTime", e.target.value)}
                 className="w-full border border-[var(--border)] focus:border-[var(--ring)] rounded-full bg-white text-gray-900 shadow-none transition-all duration-150"
-                style={{ borderColor: 'var(--border, #E7E5E4)', outline: 'none', boxShadow: 'none' }}
+                style={{ borderColor: 'var(--border, #E7E5E4)' }}
               />
             </div>
           </div>
