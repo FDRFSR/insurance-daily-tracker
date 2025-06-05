@@ -12,7 +12,8 @@ export function createForwardRefWithClassName<
 >(
   displayName: string,
   element: T,
-  baseClassName?: string
+  baseClassName?: string,
+  additionalProps?: Record<string, any>
 ) {
   const Component = React.forwardRef<
     any,
@@ -21,6 +22,7 @@ export function createForwardRefWithClassName<
     return React.createElement(element, {
       ref,
       className: cn(baseClassName, className),
+      ...additionalProps,
       ...props
     })
   })

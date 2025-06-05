@@ -94,6 +94,10 @@ export const routePatterns = {
   getAll: <T>(handler: () => Promise<T[]>, errorMessage = "Errore nel recupero delle risorse") =>
     createRouteHandler(async () => handler(), { errorMessage }),
 
+  // GET /api/resource/single - for endpoints that return a single object (like stats)
+  getSingle: <T>(handler: () => Promise<T>, errorMessage = "Errore nel recupero della risorsa") =>
+    createRouteHandler(async () => handler(), { errorMessage }),
+
   // GET /api/resource/:id  
   getById: <T>(handler: (id: number) => Promise<T | null>, errorMessage = "Errore nel recupero della risorsa") =>
     createRouteHandler(async (req, res, data, id) => handler(id!), { 

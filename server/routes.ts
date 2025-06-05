@@ -7,7 +7,7 @@ import { routePatterns, extractQueryFilters } from "./api-route-utils";
 export async function registerRoutes(app: Express): Promise<Server> {
   // 🎯 OPTIMIZED: Task statistics endpoint
   app.get("/api/tasks/stats", 
-    routePatterns.getAll(
+    routePatterns.getSingle(
       () => storage.getTaskStats(),
       "Errore nel recupero delle statistiche"
     )
