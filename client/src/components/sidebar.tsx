@@ -151,26 +151,35 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
     }
   };
 
-  const recentClients = [
-    {
-      name: "Mario Bianchi",
-      initials: "MB",
-      lastContact: "Ultima chiamata: ieri",
-      color: "from-blue-400 to-blue-600"
-    },
-    {
-      name: "Famiglia Verdi",
-      initials: "FV", 
-      lastContact: "Preventivo: 2 giorni fa",
-      color: "from-green-400 to-green-600"
-    },
-    {
-      name: "Laura Neri",
-      initials: "LN",
-      lastContact: "Sinistro: 1 settimana fa", 
-      color: "from-purple-400 to-purple-600"
-    }
-  ];
+  // Calcola i clienti recenti dinamicamente dalle task
+  const recentClientsMap = new Map<string, { name: string; lastContact: string; initials: string; color: string }>();
+  const now = new Date();
+  [...allTasks]
+    .filter(task => task.client && task.client.trim() !== "")
+    .sort((a, b) => new Date(b.dueDate || b.createdAt).getTime() - new Date(a.dueDate || a.createdAt).getTime())
+    .forEach(task => {
+      if (!recentClientsMap.has(task.client!)) {
+        // Calcola tempo trascorso dall'ultima attività
+        const lastDate = new Date(task.dueDate || task.createdAt);
+        const diffMs = now.getTime() - lastDate.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        let lastContact = "Oggi";
+        if (diffDays === 1) lastContact = "Ieri";
+        else if (diffDays > 1) lastContact = `${diffDays} giorni fa`;
+        // Iniziali
+        const initials = task.client!.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        // Colore avatar (semplice hash su nome)
+        const palette = ["from-blue-400 to-blue-600","from-green-400 to-green-600","from-purple-400 to-purple-600","from-red-400 to-red-600","from-yellow-400 to-yellow-600"];
+        const color = palette[task.client!.charCodeAt(0) % palette.length];
+        recentClientsMap.set(task.client!, {
+          name: task.client!,
+          lastContact,
+          initials,
+          color
+        });
+      }
+    });
+  const recentClients = Array.from(recentClientsMap.values()).slice(0, 5);
 
   // Funzione per ottenere i colori in base alla categoria
   const getCategoryColor = (category: string, status: string) => {
@@ -284,20 +293,24 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Clienti Recenti</h3>
         <div className="space-y-3">
-          {recentClients.map((client, index) => (
-            <div
-              key={index}
-              className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-            >
-              <div className={`w-8 h-8 bg-gradient-to-br ${client.color} rounded-full flex items-center justify-center`}>
-                <span className="text-white text-xs font-medium">{client.initials}</span>
+          {recentClients.length === 0 ? (
+            <div className="text-gray-400 text-sm">Nessun cliente recente</div>
+          ) : (
+            recentClients.map((client, index) => (
+              <div
+                key={index}
+                className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
+              >
+                <div className={`w-8 h-8 bg-gradient-to-br ${client.color} rounded-full flex items-center justify-center`}>
+                  <span className="text-white text-xs font-medium">{client.initials}</span>
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                  <div className="text-xs text-gray-600">Ultima attività: {client.lastContact}</div>
+                </div>
               </div>
-              <div className="flex-1">
-                <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                <div className="text-xs text-gray-600">{client.lastContact}</div>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </aside>
