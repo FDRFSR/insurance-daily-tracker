@@ -3,6 +3,7 @@ import * as ContextMenuPrimitive from "@radix-ui/react-context-menu"
 import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { createForwardRefWithClassName } from "@/lib/create-forward-ref"
 
 const ContextMenu = ContextMenuPrimitive.Root
 
@@ -151,17 +152,11 @@ const ContextMenuLabel = React.forwardRef<
 ))
 ContextMenuLabel.displayName = ContextMenuPrimitive.Label.displayName
 
-const ContextMenuSeparator = React.forwardRef<
-  React.ElementRef<typeof ContextMenuPrimitive.Separator>,
-  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Separator>
->(({ className, ...props }, ref) => (
-  <ContextMenuPrimitive.Separator
-    ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-border", className)}
-    {...props}
-  />
-))
-ContextMenuSeparator.displayName = ContextMenuPrimitive.Separator.displayName
+const ContextMenuSeparator = createForwardRefWithClassName(
+  "ContextMenuSeparator",
+  ContextMenuPrimitive.Separator,
+  "-mx-1 my-1 h-px bg-border"
+)
 
 const ContextMenuShortcut = ({
   className,

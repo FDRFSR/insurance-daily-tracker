@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Phone, Calculator, FileText, Cog, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import type { Task } from "@shared/schema";
@@ -7,10 +7,9 @@ import type { Task } from "@shared/schema";
 interface SidebarProps {
   onDateSelect?: (date: string | null) => void;
   selectedDate?: string | null;
-  onQuickAction?: (category: string) => void;
 }
 
-export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: SidebarProps) {
+export default function Sidebar({ onDateSelect, selectedDate }: SidebarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   
   // Fetch tasks using TanStack Query
@@ -107,57 +106,6 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
   };
 
   const calendarDays = generateCalendarDays();
-
-  // Mappa le categorie alle chiavi utilizzate nel backend
-  const quickActions = [
-    {
-      title: "Chiamata Cliente",
-      description: "Programma una chiamata",
-      icon: Phone,
-      color: "bg-blue-50 hover:bg-blue-100",
-      iconColor: "bg-blue-600",
-      category: "calls"
-    },
-    {
-      title: "Nuovo Preventivo", 
-      description: "Crea un preventivo",
-      icon: Calculator,
-      color: "bg-green-50 hover:bg-green-100",
-      iconColor: "bg-green-600",
-      category: "quotes"
-    },
-    {
-      title: "Gestisci Sinistro",
-      description: "Segui una pratica",
-      icon: FileText,
-      color: "bg-red-50 hover:bg-red-100", 
-      iconColor: "bg-red-600",
-      category: "claims"
-    },
-    {
-      title: "Attività Amministrativa",
-      description: "Documenti e pratiche",
-      icon: Cog,
-      color: "bg-orange-50 hover:bg-orange-100",
-      iconColor: "bg-orange-600",
-      category: "documents"
-    },
-    {
-      title: "Crea Appuntamento",
-      description: "Aggiungi un appuntamento in agenda",
-      icon: Calendar,
-      color: "bg-purple-50 hover:bg-purple-100",
-      iconColor: "bg-purple-600",
-      category: "appointments"
-    }
-  ];
-
-  // Handler per le azioni rapide
-  const handleQuickAction = (category: string) => {
-    if (onQuickAction) {
-      onQuickAction(category);
-    }
-  };
 
   // Calcola i clienti recenti dinamicamente dalle task
   const recentClientsMap = new Map<string, { name: string; lastContact: string; initials: string; color: string }>();
@@ -272,28 +220,6 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
               </div>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Azioni Rapide</h3>
-        <div className="space-y-3">
-          {quickActions.map((action, index) => (
-            <button
-              key={index}
-              onClick={() => handleQuickAction(action.category)}
-              className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors text-left ${action.color} hover:scale-[1.02] transform transition-transform`}
-            >
-              <div className={`w-8 h-8 ${action.iconColor} rounded-lg flex items-center justify-center`}>
-                <action.icon className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <div className="font-medium text-gray-900 text-sm">{action.title}</div>
-                <div className="text-xs text-gray-600">{action.description}</div>
-              </div>
-            </button>
-          ))}
         </div>
       </div>
 

@@ -1,9 +1,8 @@
 // client/src/components/header.tsx
-import { Bell, Shield, Check, X, User, Settings, LogOut, Palette } from "lucide-react";
+import { Bell, Shield, Check, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -144,15 +143,25 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Shield className="text-white h-4 w-4" />
-                </div>
-                <h1 className="text-xl font-bold text-gray-900">InsuraTask</h1>
-              </div>
+              <Shield className="h-7 w-7 text-blue-700" />
+              <span className="font-bold text-lg text-blue-900 tracking-tight">InsuraTask</span>
             </div>
-            <div className="animate-pulse">
-              <div className="w-32 h-8 bg-gray-200 rounded"></div>
+            {/* Nessun avatar/profilo utente */}
+            <div className="flex items-center space-x-2">
+              {/* Notifiche e altri pulsanti rimangono */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-6 w-6 text-gray-600" />
+                    {totalNotifications > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
+                        {totalNotifications}
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                {/* ...popover content... */}
+              </Popover>
             </div>
           </div>
         </div>
@@ -165,25 +174,18 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Shield className="text-white h-4 w-4" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">InsuraTask</h1>
-            </div>
+            <Shield className="h-7 w-7 text-blue-700" />
+            <span className="font-bold text-lg text-blue-900 tracking-tight">InsuraTask</span>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            {/* 🔔 Notifications - Design coerente */}
-            <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
+          {/* Nessun avatar/profilo utente */}
+          <div className="flex items-center space-x-2">
+            {/* Notifiche e altri pulsanti rimangono */}
+            <Popover>
               <PopoverTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <Bell className="h-5 w-5 text-gray-600" />
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-6 w-6 text-gray-600" />
                   {totalNotifications > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
                       {totalNotifications}
                     </span>
                   )}
@@ -256,7 +258,6 @@ export default function Header() {
                 </div>
               </PopoverContent>
             </Popover>
-            {/* ...other header elements like user profile dropdown */}
           </div>
         </div>
       </div>
