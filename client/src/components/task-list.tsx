@@ -34,9 +34,10 @@ const statusLabels = {
 interface TaskListProps {
   onTaskEdit?: (task: Task) => void;
   selectedDate?: string | null;
+  searchQuery?: string;
 }
 
-export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
+export default function TaskList({ onTaskEdit, selectedDate, searchQuery: externalSearchQuery }: TaskListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,14 +48,15 @@ export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
 
   // Query diretta con parametri semplici
   const { data: allTasks = [], isLoading } = useQuery<Task[]>({
-    queryKey: ["/api/tasks", selectedCategory, searchQuery],
+    queryKey: ["/api/tasks", selectedCategory, externalSearchQuery || searchQuery],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedCategory && selectedCategory !== "all") {
         params.append("category", selectedCategory);
       }
-      if (searchQuery) {
-        params.append("search", searchQuery);
+      const currentSearch = externalSearchQuery || searchQuery;
+      if (currentSearch) {
+        params.append("search", currentSearch);
       }
       
       const url = `/api/tasks${params.toString() ? `?${params.toString()}` : ''}`;
