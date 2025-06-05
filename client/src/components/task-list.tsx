@@ -74,7 +74,8 @@ export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
     if (selectedDate) {
       tasks = tasks.filter(task => task.dueDate === selectedDate);
     }
-    
+    // Nascondi le attività completate
+    tasks = tasks.filter(task => !task.completed);
     return tasks;
   }, [allTasks, selectedDate]);
 
