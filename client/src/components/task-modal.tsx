@@ -139,8 +139,8 @@ function SimpleSelect({ value, onValueChange, options, placeholder, disabled, cl
       {isOpen && (
         <div 
           ref={dropdownRef}
-          className="absolute top-full left-0 right-0 mt-1 bg-white border border-[var(--border)] rounded-2xl shadow-lg max-h-60 overflow-y-auto"
-          style={{ zIndex: 1000 }}
+          className="absolute top-full left-0 right-0 mt-1 bg-white/95 border border-[var(--border)] rounded-2xl shadow-[0_4px_24px_0_rgba(0,0,0,0.08)] transition-all duration-200 max-h-60 overflow-y-auto focus:outline-none"
+          style={{ zIndex: 1000, borderColor: 'var(--border, #E7E5E4)', borderStyle: 'solid', outline: 'none', boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)' }}
           role="listbox"
         >
           {options.map((option) => (
@@ -151,6 +151,7 @@ function SimpleSelect({ value, onValueChange, options, placeholder, disabled, cl
               className={`
                 w-full px-3 py-2 text-left text-sm hover:bg-blue-50 focus:bg-blue-50
                 flex items-center justify-between
+                transition-colors duration-150
                 ${value === option.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'}
               `}
               role="option"
@@ -489,17 +490,16 @@ export default function TaskModal({
           <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
             <Button 
               type="button" 
-              variant="outline" 
               onClick={onClose} 
               disabled={isLoading}
-              className="px-6"
+              className="px-6 py-3 rounded-2xl font-semibold transition-smooth bg-white text-blue-700 border border-blue-200 hover:bg-blue-50 hover:border-blue-400 focus:ring-2 focus:ring-blue-200"
             >
               Annulla
             </Button>
             <Button 
               type="submit" 
               disabled={isLoading || !formData.title.trim() || !formData.category} 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-semibold transition-smooth"
             >
               {isLoading ? "Salvando..." : task ? "Aggiorna Attività" : "Salva Attività"}
             </Button>

@@ -65,52 +65,44 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
     return selectedDate === dateToCheck;
   };
 
+  // Helper per formattare la data in YYYY-MM-DD in locale (no UTC)
+  const formatLocalDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Genera dinamicamente i giorni del calendario
   const generateCalendarDays = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
-    // Primo giorno del mese
     const firstDay = new Date(year, month, 1);
-    // Ultimo giorno del mese
     const lastDay = new Date(year, month + 1, 0);
-    
-    // Trova il lunedì della settimana del primo giorno (1 = lunedì, 0 = domenica)
     const startDate = new Date(firstDay);
-    const dayOfWeek = (firstDay.getDay() + 6) % 7; // Converti domenica=0 a domenica=6
+    const dayOfWeek = (firstDay.getDay() + 6) % 7;
     startDate.setDate(firstDay.getDate() - dayOfWeek);
-    
     const days = [];
     const today = new Date();
     const currentDay = new Date(startDate);
-    
-    // Genera 42 giorni (6 settimane x 7 giorni)
     for (let i = 0; i < 42; i++) {
       const isCurrentMonth = currentDay.getMonth() === month;
       const isToday = currentDay.toDateString() === today.toDateString();
-      
-      // Formatta la data corrente come YYYY-MM-DD per verificare se ci sono attività
-      const formattedDate = currentDay.toISOString().split('T')[0];
-      
-      // Controlla se ci sono attività per questa data
+      // Usa la funzione helper per evitare problemi di fuso orario
+      const formattedDate = formatLocalDate(currentDay);
       const tasksForDate = allTasks.filter(task => task.dueDate === formattedDate);
       const hasEvent = tasksForDate.length > 0;
-      
-      // Controlla se ci sono attività in ritardo
       const hasOverdue = tasksForDate.some(task => task.status === "overdue");
-      
       days.push({
         day: currentDay.getDate(),
         isCurrentMonth,
         isToday,
         hasEvent,
         isOverdue: hasOverdue,
-        tasksForDate  // Passa anche gli eventi specifici per questa data
+        tasksForDate
       });
-      
       currentDay.setDate(currentDay.getDate() + 1);
     }
-    
     return days;
   };
 
