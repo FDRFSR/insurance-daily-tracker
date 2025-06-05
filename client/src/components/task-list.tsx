@@ -105,17 +105,10 @@ export default function TaskList({ onTaskEdit, selectedDate }: TaskListProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/tasks/stats"] });
-      toast({
-        title: "Successo",
-        description: "Attività eliminata con successo",
-      });
+      // Notifica toast rimossa per uniformità design system
     },
     onError: () => {
-      toast({
-        title: "Errore", 
-        description: "Impossibile eliminare l'attività",
-        variant: "destructive",
-      });
+      // Notifica toast rimossa per uniformità design system
     },
   });
 
