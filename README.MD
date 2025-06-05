@@ -1,6 +1,6 @@
 # 🛡️ InsuraTask
 
-**Una moderna applicazione web per la gestione delle attività di agenti assicurativi**
+**Una moderna applicazione web e desktop per la gestione delle attività di agenti assicurativi**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
@@ -19,6 +19,8 @@ InsuraTask è una soluzione completa per agenti assicurativi che vogliono ottimi
 - **Migliorare** l'organizzazione temporale degli agenti
 - **Ridurre** le attività perse o dimenticate
 - **Fornire** una panoramica chiara delle priorità quotidiane
+
+---
 
 ## 📸 Screenshots
 
@@ -61,6 +63,8 @@ InsuraTask è una soluzione completa per agenti assicurativi che vogliono ottimi
 - **Preferenze utente**: Tema chiaro/scuro, lingua, notifiche
 - **Persistenza locale**: Salvataggio automatico delle preferenze
 
+---
+
 ## 🛠️ Stack Tecnologico
 
 ### Frontend
@@ -85,70 +89,46 @@ InsuraTask è una soluzione completa per agenti assicurativi che vogliono ottimi
 - **Wouter** - Routing leggero
 - **tsx** - TypeScript execution per development
 
-## 🚀 Quick Start
-
-### Prerequisiti
-- **Node.js** >= 18.0.0
-- **npm** >= 8.0.0
-
-### Installazione
-
-```bash
-# 1. Clona il repository
-git clone https://github.com/FDRFSR/insuratask.git
-cd insuratask
-
-# 2. Installa le dipendenze
-npm install
-
-# 3. Avvia l'applicazione in modalità sviluppo
-npm run dev
-
-# 4. Apri il browser su http://localhost:5000
-```
-
-### Build per Produzione
-
-```bash
-# Build completa (frontend + backend)
-npm run build
-
-# Avvia in modalità produzione
-npm start
-```
+---
 
 ## 📁 Struttura del Progetto
 
 ```
 insuratask/
-├── 📂 client/                 # Frontend React
-│   ├── 📂 src/
-│   │   ├── 📂 components/     # Componenti riutilizabili
-│   │   │   ├── 📂 ui/        # UI components (shadcn/ui)
-│   │   │   ├── 📄 header.tsx
-│   │   │   ├── 📄 sidebar.tsx
-│   │   │   ├── 📄 task-list.tsx
-│   │   │   ├── 📄 task-modal.tsx
-│   │   │   └── 📄 enhanced-calendar.tsx
-│   │   ├── 📂 contexts/       # React Context providers
-│   │   ├── 📂 hooks/          # Custom hooks
-│   │   ├── 📂 lib/            # Utility functions
-│   │   ├── 📂 pages/          # Page components
-│   │   └── 📄 main.tsx        # Entry point
-│   └── 📄 index.html
-├── 📂 server/                 # Backend Express
-│   ├── 📄 index.ts           # Server entry point
-│   ├── 📄 routes.ts          # API routes definition
-│   ├── 📄 storage.ts         # Data layer interface
-│   ├── 📄 sqlite-storage.ts  # SQLite implementation
-│   └── 📄 vite.ts            # Vite integration
-├── 📂 shared/                # Codice condiviso
-│   └── 📄 schema.ts          # Zod schemas e types
-├── 📄 package.json
-├── 📄 tsconfig.json
-├── 📄 tailwind.config.ts
-└── 📄 vite.config.ts
+├── client/                 # Frontend React
+│   ├── src/
+│   │   ├── components/     # Componenti riutilizzabili
+│   │   │   ├── ui/        # UI components (shadcn/ui)
+│   │   │   ├── header.tsx
+│   │   │   ├── sidebar.tsx
+│   │   │   ├── task-list.tsx
+│   │   │   ├── task-modal.tsx
+│   │   │   └── enhanced-calendar.tsx
+│   │   ├── contexts/       # React Context providers
+│   │   ├── hooks/          # Custom hooks
+│   │   ├── lib/            # Utility functions
+│   │   ├── pages/          # Page components
+│   │   └── main.tsx        # Entry point
+│   └── index.html
+├── server/                 # Backend Express
+│   ├── index.ts           # Server entry point
+│   ├── routes.ts          # API routes definition
+│   ├── storage.ts         # Data layer interface
+│   ├── sqlite-storage.ts  # SQLite implementation
+│   └── vite.ts            # Vite integration
+├── shared/                # Codice condiviso
+│   └── schema.ts          # Zod schemas e types
+├── electron/              # Wrapper Electron per desktop app
+├── screenshots/           # Screenshot per la documentazione
+├── dist-pkg/              # Build standalone desktop
+├── package.json
+├── tsconfig.json
+├── tailwind.config.ts
+├── vite.config.ts
+└── README.MD
 ```
+
+---
 
 ## 🔌 API Reference
 
@@ -213,6 +193,8 @@ GET /api/tasks?category=quotes&status=pending&search=preventivo
 }
 ```
 
+---
+
 ## 🎨 Design System
 
 ### Palette Colori
@@ -229,7 +211,7 @@ GET /api/tasks?category=quotes&status=pending&search=preventivo
 --background: #FAFAF9;       /* Sfondo principale */
 --foreground: #080808;       /* Testo principale */
 --muted: #F5F5F4;           /* Elementi secondari */
---border: #E7E5E4;          /* Bordi */
+--border: #E7E5E4;           /* Bordi */
 ```
 
 ### Categorie Attività
@@ -242,18 +224,25 @@ GET /api/tasks?category=quotes&status=pending&search=preventivo
 | `documents` | 📁 | Yellow | Documentazione |
 | `appointments` | 📅 | Purple | Appuntamenti |
 
+---
+
+## 🗄️ Database locale
+
+- Il database SQLite viene creato in `~/.config/insuratask/tasks.db` (Linux/macOS) o nella cartella utente su Windows.
+- Non viene mai sovrascritto da nuove release.
+- Backup e migrazioni schema gestite dal backend.
+
+---
+
 ## 🧪 Testing
 
 ```bash
-# Type checking
-npm run check
-
-# Build test
-npm run build
-
-# Linting
-npx eslint client/src server/
+npm run check      # Type checking
+npm run build      # Build test
+npx eslint client/src server/   # Linting
 ```
+
+---
 
 ## 🚀 Deployment
 
@@ -288,6 +277,8 @@ EXPOSE 5000
 CMD ["npm", "start"]
 ```
 
+---
+
 ## 🤝 Contributing
 
 Le contribuzioni sono benvenute! Per contribuire al progetto:
@@ -305,6 +296,8 @@ Le contribuzioni sono benvenute! Per contribuire al progetto:
 - Scrivi **test** per le nuove funzionalità
 - Mantieni la **documentazione** aggiornata
 - Usa **commit convenzionali** (feat:, fix:, docs:, etc.)
+
+---
 
 ## 🔮 Roadmap
 
@@ -328,9 +321,13 @@ Le contribuzioni sono benvenute! Per contribuire al progetto:
 - [ ] API pubblica per integrazioni
 - [ ] Dashboard analytics avanzate
 
+---
+
 ## 📄 License
 
 Questo progetto è rilasciato sotto licenza **MIT**. Vedi il file [LICENSE](LICENSE) per maggiori dettagli.
+
+---
 
 ## 📧 Contatti
 
@@ -339,59 +336,7 @@ Questo progetto è rilasciato sotto licenza **MIT**. Vedi il file [LICENSE](LICE
 - 🐙 **GitHub**: [FDRFSR](https://github.com/FDRFSR)
 - 📧 **Email**: [iscrizioni.fusarri at gmail.com](mailto:iscrizioni.fusarri at gmail.com)
 
----
 
-## 📸 Come Aggiornare gli Screenshots
-
-Per mantenere gli screenshot aggiornati, segui questi passaggi:
-
-### Setup per Screenshots
-```bash
-# 1. Avvia l'applicazione in modalità development
-npm run dev
-
-# 2. Apri http://localhost:5000 nel browser
-# 3. Assicurati che ci siano dati di test nel database
-```
-
-### Screenshots da Catturare
-
-1. **dashboard-overview.png** (1920x1080)
-   - Vista completa della dashboard
-   - Statistiche visibili in alto
-   - Task list a sinistra, sidebar a destra
-   - Alcune attività di esempio presenti
-
-2. **task-management.png** (1200x800)
-   - Focus sulla sezione task list
-   - Filtri categoria visibili
-   - Alcune attività con stati diversi (pending, completed, overdue)
-   - Barra di ricerca con testo di esempio
-
-### Tools Consigliati
-- **macOS**: Cmd+Shift+4 per screenshot area
-- **Windows**: Windows+Shift+S per Snipping Tool
-- **Browser DevTools**: F12 > Device Toolbar per mobile simulation
-- **Lightshot** o **CleanShot X** per editing avanzato
-
-### Naming Convention
-```
-screenshots/
-├── dashboard-overview.png
-└── task-management.png
-```
-
----
-
-## 🙏 Ringraziamenti
-
-- **shadcn/ui** per i componenti UI di alta qualità
-- **Radix UI** per i componenti accessibili
-- **Lucide React** per le icone moderne
-- **TanStack Query** per il data fetching intelligente
-- **Tailwind CSS** per il sistema di design utility-first
-
----
 
 <div align="center">
 
