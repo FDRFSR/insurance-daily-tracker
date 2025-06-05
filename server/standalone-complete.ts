@@ -55,10 +55,13 @@ type UpdateTask = z.infer<typeof updateTaskSchema>;
 class StandaloneStorage {
   private db: Database.Database;
 
-  constructor(dbPath = 'tasks.db') {
-    const fullPath = path.resolve(process.cwd(), dbPath);
+  constructor(dbPath = path.join(process.env.HOME || process.env.USERPROFILE || '.', '.config', 'insuratask', 'tasks.db')) {
+    const fullPath = path.resolve(dbPath);
+    const dir = path.dirname(fullPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
     this.db = new Database(fullPath);
-    
     this.db.pragma('journal_mode = WAL');
     this.initDatabase();
     this.seedData();

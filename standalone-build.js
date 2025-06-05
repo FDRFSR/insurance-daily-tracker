@@ -99,12 +99,17 @@ function getStaticPath() {
 }
 
 function getDatabasePath() {
+  const userHome = process.env.HOME || process.env.USERPROFILE || '.';
+  const configDir = path.join(userHome, '.config', 'insuratask');
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
   if (isPkg) {
     // In PKG, usa directory accanto all'eseguibile
     return path.join(path.dirname(process.execPath), 'insuratask.db');
   }
-  
-  return path.join(__dirname, 'insuratask.db');
+  // Default: salva sempre in ~/.config/insuratask/insuratask.db
+  return path.join(configDir, 'insuratask.db');
 }
 
 // 🗄️ Database setup

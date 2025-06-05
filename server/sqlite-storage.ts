@@ -2,15 +2,19 @@ import Database from 'better-sqlite3';
 import { type Task, type InsertTask, type UpdateTask } from "@shared/schema";
 import { type IStorage } from './storage';
 import path from 'path';
+import fs from 'fs';
 
 export class SQLiteStorage implements IStorage {
   private db: Database.Database;
 
-  constructor(dbPath = 'tasks.db') {
-    // Crea il database nella cartella del progetto
-    const fullPath = path.resolve(process.cwd(), dbPath);
+  constructor(dbPath = path.join(process.env.HOME || process.env.USERPROFILE || '.', '.config', 'insuratask', 'tasks.db')) {
+    // Crea il database nella cartella utente (~/.config/insuratask/tasks.db)
+    const fullPath = path.resolve(dbPath);
+    const dir = path.dirname(fullPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
     this.db = new Database(fullPath);
-    
     // Abilita WAL mode per migliori performance
     this.db.pragma('journal_mode = WAL');
     
