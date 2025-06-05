@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Phone, Calculator, FileText, Cog } from "lucide-react";
+import { ChevronLeft, ChevronRight, Phone, Calculator, FileText, Cog, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import type { Task } from "@shared/schema";
@@ -141,6 +141,14 @@ export default function Sidebar({ onDateSelect, selectedDate, onQuickAction }: S
       color: "bg-orange-50 hover:bg-orange-100",
       iconColor: "bg-orange-600",
       category: "documents"
+    },
+    {
+      title: "Crea Appuntamento",
+      description: "Aggiungi un appuntamento in agenda",
+      icon: Calendar,
+      color: "bg-purple-50 hover:bg-purple-100",
+      iconColor: "bg-purple-600",
+      category: "appointments"
     }
   ];
 

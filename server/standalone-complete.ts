@@ -256,8 +256,17 @@ typeof updates.completed === 'boolean' ? (updates.completed ? 1 : 0) : (existing
   }
 
   async getTasksByStatus(status: string): Promise<Task[]> {
-    const rows = this.db.prepare('SELECT * FROM tasks WHERE status = ? ORDER BY created_at DESC').all(status);
-    return rows.map(row => this.rowToTask(row));
+    if (status === "overdue") {
+      // Only tasks with due_date < today, not completed, and not already completed
+      const today = new Date().toISOString().split('T')[0];
+      const rows = this.db.prepare(
+        'SELECT * FROM tasks WHERE (status = ? OR status = ?) AND due_date < ? AND completed = 0 ORDER BY created_at DESC'
+      ).all('pending', 'overdue', today);
+      return rows.map(row => this.rowToTask(row));
+    } else {
+      const rows = this.db.prepare('SELECT * FROM tasks WHERE status = ? ORDER BY created_at DESC').all(status);
+      return rows.map(row => this.rowToTask(row));
+    }
   }
 
   async searchTasks(query: string): Promise<Task[]> {
