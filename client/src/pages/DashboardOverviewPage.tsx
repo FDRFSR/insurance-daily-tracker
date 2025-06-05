@@ -82,13 +82,13 @@ export default function DashboardOverviewPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20">
       <Header />
       <main className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 space-y-10">
+        {/* Sezione statistiche principali */}
         <section aria-labelledby="stats-heading">
           <h1 id="stats-heading" className="sr-only">Statistiche principali</h1>
           <DashboardStats />
         </section>
-
         <hr className="my-2 border-gray-200" />
-
+        {/* Sezione analytics avanzate */}
         <section aria-labelledby="analytics-heading" className="space-y-4">
           <div className="flex items-center space-x-2 mb-2">
             <BarChart3 className="h-5 w-5 text-blue-600" />
@@ -96,7 +96,6 @@ export default function DashboardOverviewPage() {
           </div>
           <DashboardCharts />
         </section>
-
         <hr className="my-2 border-gray-200" />
 
         <section aria-label="Riepiloghi rapidi" className="grid grid-cols-1 md:grid-cols-2 gap-6">
