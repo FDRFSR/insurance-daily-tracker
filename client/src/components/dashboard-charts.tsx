@@ -4,6 +4,13 @@ import type { Task } from "@shared/schema";
 import { LineChart, Line, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { Users } from "lucide-react";
 
+// Utility function for date comparison
+function sameDay(a: Date, b: Date) {
+	return a.getFullYear() === b.getFullYear() && 
+		   a.getMonth() === b.getMonth() && 
+		   a.getDate() === b.getDate();
+}
+
 // Componente per grafico a barre settimanale
 const WeeklyBarChart = () => {
 	const { data: allTasks = [] } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
@@ -19,9 +26,6 @@ const WeeklyBarChart = () => {
 		return { day: dayName, completed, total };
 	});
 	const maxTotal = Math.max(...weekData.map(d => d.total), 1);
-	function sameDay(a: Date, b: Date) {
-		return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-	}
 	return (
 		<div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
 			<div className="flex items-center justify-between mb-6">
@@ -175,12 +179,6 @@ const DailyTrendChart = () => {
 		d.setDate(now.getDate() - (13 - i));
 		return d;
 	});
-	
-	function sameDay(a: Date, b: Date) {
-		return a.getFullYear() === b.getFullYear() && 
-			   a.getMonth() === b.getMonth() && 
-			   a.getDate() === b.getDate();
-	}
 	
 	const data = days.map((date) => {
 		const day = date.getDate();
