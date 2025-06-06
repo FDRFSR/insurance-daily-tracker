@@ -167,7 +167,7 @@ const PerformanceMetrics = () => {
 };
 
 // Andamento giornaliero (ultimi 14 giorni)
-const MonthlyTrendChart = () => {
+const DailyTrendChart = () => {
 	const { data: allTasks = [] } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
 	const now = new Date();
 	const days = Array.from({ length: 14 }).map((_, i) => {
@@ -185,8 +185,9 @@ const MonthlyTrendChart = () => {
 	const data = days.map((date) => {
 		const day = date.getDate();
 		const month = (date.getMonth() + 1).toString().padStart(2, '0');
+		const dayName = date.toLocaleDateString('it-IT', { weekday: 'short' });
 		const completed = allTasks.filter(t => t.completed && sameDay(new Date(t.completedAt || t.dueDate || t.createdAt), date)).length;
-		return { name: `${day}/${month}`, completed };
+		return { name: `${dayName} ${day}/${month}`, completed };
 	});
 	return (
 		<div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
@@ -276,7 +277,7 @@ export default function DashboardCharts() {
 				<PerformanceMetrics />
 			</div>
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-				<MonthlyTrendChart />
+				<DailyTrendChart />
 				<ClientsToRecall />
 			</div>
 		</section>
