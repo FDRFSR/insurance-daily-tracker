@@ -1,9 +1,8 @@
 // client/src/components/header.tsx
-import { Bell, Shield, Check, X, User, Settings, LogOut, Palette } from "lucide-react";
+import { Bell, Shield, Check, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -30,6 +29,38 @@ const getAvatarColor = (name: string): string => {
   const index = name.charCodeAt(0) % colors.length;
   return colors[index];
 };
+
+// Componente memoizzato per una singola notifica
+const NotificationItem = memo(function NotificationItem({ task, type, onDismiss }: { task: Task, type: 'overdue' | 'today', onDismiss?: (id: number, e: React.MouseEvent) => void }) {
+  return (
+    <div key={`${type}-${task.id}`} className={`p-3 hover:bg-${type === 'overdue' ? 'red' : 'blue'}-50 group`}>
+      <div className="flex items-start space-x-3">
+        <div className={`w-2 h-2 ${type === 'overdue' ? 'bg-red-500' : 'bg-blue-500'} rounded-full mt-2 flex-shrink-0`}></div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
+          <p className={`text-xs font-medium ${type === 'overdue' ? 'text-red-600' : 'text-blue-600'}`}>{type === 'overdue' ? 'IN RITARDO' : <>OGGI {task.dueTime ? task.dueTime : ''}</>}</p>
+          {task.client && (
+            <p className="text-xs text-gray-600">Cliente: {task.client}</p>
+          )}
+        </div>
+        {type === 'overdue' && onDismiss && (
+          <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
+              onClick={(e) => onDismiss(task.id, e)}
+              title="Nascondi notifica"
+              aria-label="Nascondi notifica"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
 
 export default function Header() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -92,8 +123,15 @@ export default function Header() {
     }
   });
 
-  const overdueCount = urgentTasks.length;
-  const totalNotifications = overdueCount + (todayTasks?.length || 0);
+  // Memoizza notifiche per performance
+  const notifications = useMemo(() => {
+    const urgent = allUrgentTasks.filter(task => !dismissedNotifications.has(task.id) && task.status === 'overdue' && !task.completed);
+    const today = allTodayTasks.filter(task => !dismissedNotifications.has(task.id));
+    return { urgent, today };
+  }, [allUrgentTasks, allTodayTasks, dismissedNotifications]);
+
+  const overdueCount = notifications.urgent.length;
+  const totalNotifications = overdueCount + notifications.today.length;
 
   const formatTime = (time: string | null) => {
     if (!time) return "";
@@ -144,15 +182,24 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <Shield className="text-white h-4 w-4" />
-                </div>
-                <h1 className="text-xl font-bold text-gray-900">InsuraTask</h1>
-              </div>
+              <Shield className="h-7 w-7 text-blue-700" />
+              <span className="font-bold text-lg text-blue-900 tracking-tight">InsuraTask</span>
             </div>
-            <div className="animate-pulse">
-              <div className="w-32 h-8 bg-gray-200 rounded"></div>
+            <div className="flex items-center space-x-2">
+              {/* Notifiche e altri pulsanti rimangono */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative" aria-label="Apri notifiche">
+                    <Bell className="h-6 w-6 text-gray-600" />
+                    {totalNotifications > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
+                        {totalNotifications}
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                {/* ...popover content... */}
+              </Popover>
             </div>
           </div>
         </div>
@@ -165,25 +212,17 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Shield className="text-white h-4 w-4" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">InsuraTask</h1>
-            </div>
+            <Shield className="h-7 w-7 text-blue-700" />
+            <span className="font-bold text-lg text-blue-900 tracking-tight">InsuraTask</span>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            {/* 🔔 Notifications - Design coerente */}
-            <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
+          <div className="flex items-center space-x-2">
+            {/* Notifiche e altri pulsanti rimangono */}
+            <Popover>
               <PopoverTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <Bell className="h-5 w-5 text-gray-600" />
+                <Button variant="ghost" size="icon" className="relative" aria-label="Apri notifiche">
+                  <Bell className="h-6 w-6 text-gray-600" />
                   {totalNotifications > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
                       {totalNotifications}
                     </span>
                   )}
@@ -202,61 +241,24 @@ export default function Header() {
                   )}
                 </div>
                 <div className="max-h-96 overflow-y-auto">
-                  {urgentTasks.length === 0 && todayTasks.length === 0 ? (
+                  {notifications.urgent.length === 0 && notifications.today.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">
                       <Check className="h-8 w-8 mx-auto mb-2 text-green-500" />
                       Nessuna notifica
                     </div>
                   ) : (
                     <div className="divide-y divide-gray-100">
-                      {urgentTasks.map((task) => (
-                        <div key={`overdue-${task.id}`} className="p-3 hover:bg-red-50 group">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
-                              <p className="text-xs text-red-600 font-medium">IN RITARDO</p>
-                              {task.client && (
-                                <p className="text-xs text-gray-600">Cliente: {task.client}</p>
-                              )}
-                            </div>
-                            <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full"
-                                onClick={(e) => handleDismissNotification(task.id, e)}
-                                title="Nascondi notifica"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
+                      {notifications.urgent.map((task) => (
+                        <NotificationItem key={`overdue-${task.id}`} task={task} type="overdue" onDismiss={handleDismissNotification} />
                       ))}
-                      
-                      {todayTasks.map((task) => (
-                        <div key={`today-${task.id}`} className="p-3 hover:bg-blue-50 group">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
-                              <p className="text-xs text-blue-600 font-medium">
-                                OGGI {formatTime(task.dueTime)}
-                              </p>
-                              {task.client && (
-                                <p className="text-xs text-gray-600">Cliente: {task.client}</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                      {notifications.today.map((task) => (
+                        <NotificationItem key={`today-${task.id}`} task={task} type="today" />
                       ))}
                     </div>
                   )}
                 </div>
               </PopoverContent>
             </Popover>
-            {/* ...other header elements like user profile dropdown */}
           </div>
         </div>
       </div>

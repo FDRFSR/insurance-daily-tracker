@@ -6,6 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { createForwardRefWithClassName } from "@/lib/create-forward-ref"
 
 const Sheet = SheetPrimitive.Root
 
@@ -74,57 +75,29 @@ const SheetContent = React.forwardRef<
 ))
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
-const SheetHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col space-y-2 text-center sm:text-left",
-      className
-    )}
-    {...props}
-  />
+const SheetHeader = createForwardRefWithClassName(
+  "SheetHeader",
+  "div",
+  "flex flex-col space-y-2 text-center sm:text-left"
 )
-SheetHeader.displayName = "SheetHeader"
 
-const SheetFooter = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-      className
-    )}
-    {...props}
-  />
+const SheetFooter = createForwardRefWithClassName(
+  "SheetFooter",
+  "div",
+  "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2"
 )
-SheetFooter.displayName = "SheetFooter"
 
-const SheetTitle = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Title
-    ref={ref}
-    className={cn("text-lg font-semibold text-foreground", className)}
-    {...props}
-  />
-))
-SheetTitle.displayName = SheetPrimitive.Title.displayName
+const SheetTitle = createForwardRefWithClassName(
+  "SheetTitle",
+  SheetPrimitive.Title,
+  "text-lg font-semibold text-foreground"
+)
 
-const SheetDescription = React.forwardRef<
-  React.ElementRef<typeof SheetPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Description
-    ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
-    {...props}
-  />
-))
-SheetDescription.displayName = SheetPrimitive.Description.displayName
+const SheetDescription = createForwardRefWithClassName(
+  "SheetDescription",
+  SheetPrimitive.Description,
+  "text-sm text-muted-foreground"
+)
 
 export {
   Sheet,
