@@ -166,26 +166,34 @@ const PerformanceMetrics = () => {
 	);
 };
 
-// Andamento mensile (ultimi 12 mesi)
+// Andamento giornaliero (ultimi 14 giorni)
 const MonthlyTrendChart = () => {
 	const { data: allTasks = [] } = useQuery<Task[]>({ queryKey: ["/api/tasks"] });
 	const now = new Date();
-	const months = Array.from({ length: 12 }).map((_, i) => {
-		const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+	const days = Array.from({ length: 14 }).map((_, i) => {
+		const d = new Date(now);
+		d.setDate(now.getDate() - (13 - i));
 		return d;
 	});
-	const data = months.map((date) => {
-		const month = date.toLocaleString('default', { month: 'short' });
-		const year = date.getFullYear();
-		const completed = allTasks.filter(t => t.completed && new Date(t.completedAt || t.dueDate || t.createdAt).getMonth() === date.getMonth() && new Date(t.completedAt || t.dueDate || t.createdAt).getFullYear() === year).length;
-		return { name: `${month} ${year.toString().slice(-2)}`, completed };
+	
+	function sameDay(a: Date, b: Date) {
+		return a.getFullYear() === b.getFullYear() && 
+			   a.getMonth() === b.getMonth() && 
+			   a.getDate() === b.getDate();
+	}
+	
+	const data = days.map((date) => {
+		const day = date.getDate();
+		const month = (date.getMonth() + 1).toString().padStart(2, '0');
+		const completed = allTasks.filter(t => t.completed && sameDay(new Date(t.completedAt || t.dueDate || t.createdAt), date)).length;
+		return { name: `${day}/${month}`, completed };
 	});
 	return (
 		<div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6">
 			<div className="flex items-center justify-between mb-6">
 				<div>
-					<h3 className="text-lg font-semibold text-gray-900">Andamento Mensile</h3>
-					<p className="text-sm text-gray-600">Attività completate negli ultimi 12 mesi</p>
+					<h3 className="text-lg font-semibold text-gray-900">Andamento Giornaliero</h3>
+					<p className="text-sm text-gray-600">Attività completate negli ultimi 14 giorni</p>
 				</div>
 				<BarChart3 className="h-6 w-6 text-blue-600" />
 			</div>
