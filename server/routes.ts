@@ -3,8 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertTaskSchema, updateTaskSchema } from "@shared/schema";
 import { routePatterns, extractQueryFilters } from "./api-route-utils";
+import { exportRouter } from "./routes/export";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // 📊 Export routes
+  app.use("/api/export", exportRouter);
+
   // 🎯 OPTIMIZED: Task statistics endpoint
   app.get("/api/tasks/stats", 
     routePatterns.getSingle(

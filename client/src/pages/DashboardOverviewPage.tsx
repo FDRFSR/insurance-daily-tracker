@@ -1,7 +1,11 @@
-import { BarChart3, ListTodo, Users } from "lucide-react";
+import { BarChart3, ListTodo, Users, Download } from "lucide-react";
+import { useState } from "react";
 import Header from "@/components/header";
 import DashboardStats from "@/components/dashboard-stats";
 import DashboardCharts from "@/components/dashboard-charts";
+import TaskModal from "@/components/task-modal";
+import { ExportModal } from "@/components/export/ExportModal";
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import type { Task } from "@shared/schema";
 
@@ -36,10 +40,25 @@ function getLastContact(dateStr: string) {
 }
 
 export default function DashboardOverviewPage() {
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
+
   // Recupera tutte le task
   const { data: allTasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
   });
+
+  // Handler per le azioni rapide
+  const handleQuickAction = (category: string) => {
+    setSelectedCategory(category);
+    setIsTaskModalOpen(true);
+  };
+
+  const handleCloseTaskModal = () => {
+    setIsTaskModalOpen(false);
+    setSelectedCategory(undefined);
+  };
 
   // Attività recenti: ultime 5 completate o in scadenza
   const recentTasks: RecentTask[] = allTasks
@@ -85,14 +104,25 @@ export default function DashboardOverviewPage() {
         {/* Sezione statistiche principali */}
         <section aria-labelledby="stats-heading">
           <h1 id="stats-heading" className="sr-only">Statistiche principali</h1>
-          <DashboardStats />
+          <DashboardStats onQuickAction={handleQuickAction} />
         </section>
         <hr className="my-2 border-gray-200" />
         {/* Sezione analytics avanzate */}
         <section aria-labelledby="analytics-heading" className="space-y-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <BarChart3 className="h-5 w-5 text-blue-600" />
-            <h2 id="analytics-heading" className="text-lg font-semibold text-gray-900 tracking-tight">Analytics Avanzate</h2>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <BarChart3 className="h-5 w-5 text-blue-600" />
+              <h2 id="analytics-heading" className="text-lg font-semibold text-gray-900 tracking-tight">Analytics Avanzate</h2>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-2 border-0"
+            >
+              <Download className="h-4 w-4" />
+              Esporta Report
+            </Button>
           </div>
           <DashboardCharts />
         </section>
@@ -148,6 +178,19 @@ export default function DashboardOverviewPage() {
             )}
           </div>
         </section>
+        
+        {/* Modal Export */}
+        <ExportModal 
+          open={isExportModalOpen} 
+          onOpenChange={setIsExportModalOpen} 
+        />
+        
+        {/* Modal Task per Azioni Rapide */}
+        <TaskModal
+          isOpen={isTaskModalOpen}
+          onClose={handleCloseTaskModal}
+          preselectedCategory={selectedCategory}
+        />
       </main>
     </div>
   );

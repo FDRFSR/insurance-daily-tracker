@@ -1,7 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle, Clock, Phone, ListTodo, TrendingUp, Users, Calendar, AlertTriangle } from "lucide-react";
+import { CheckCircle, Clock, Phone, ListTodo, TrendingUp, Users, Calendar, AlertTriangle, Calculator, FileText, Folder } from "lucide-react";
 import type { TaskStats } from "@/lib/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+interface DashboardStatsProps {
+  onQuickAction?: (category: string) => void;
+}
 
 // Componente per il grafico di progresso circolare
 const CircularProgress = ({ percentage, size = 60, strokeWidth = 4 }: { percentage: number; size?: number; strokeWidth?: number }) => {
@@ -61,7 +65,7 @@ const TrendIndicator = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
   );
 };
 
-export default function DashboardStats() {
+export default function DashboardStats({ onQuickAction }: DashboardStatsProps) {
   const { data: stats, isLoading } = useQuery<TaskStats>({
     queryKey: ["/api/tasks/stats"],
   });
@@ -282,22 +286,53 @@ export default function DashboardStats() {
               <Users className="h-5 w-5 text-gray-400" />
             </div>
             <div className="space-y-3">
-              <button className="w-full text-left p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors duration-200 group">
+              <button 
+                onClick={() => onQuickAction?.('calls')}
+                className="w-full text-left p-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-all duration-200 group hover:scale-[1.02] hover:shadow-sm"
+              >
                 <div className="flex items-center space-x-3">
-                  <Phone className="h-4 w-4 text-blue-600" />
+                  <Phone className="h-4 w-4 text-blue-600 group-hover:scale-110 transition-transform" />
                   <span className="text-sm font-medium text-blue-900 group-hover:text-blue-700">Nuova Chiamata</span>
                 </div>
               </button>
-              <button className="w-full text-left p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors duration-200 group">
+              
+              <button 
+                onClick={() => onQuickAction?.('quotes')}
+                className="w-full text-left p-3 rounded-lg bg-green-50 hover:bg-green-100 transition-all duration-200 group hover:scale-[1.02] hover:shadow-sm"
+              >
                 <div className="flex items-center space-x-3">
-                  <ListTodo className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-900 group-hover:text-green-700">Nuova Attività</span>
+                  <Calculator className="h-4 w-4 text-green-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium text-green-900 group-hover:text-green-700">Nuovo Preventivo</span>
                 </div>
               </button>
-              <button className="w-full text-left p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors duration-200 group">
+              
+              <button 
+                onClick={() => onQuickAction?.('appointments')}
+                className="w-full text-left p-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-all duration-200 group hover:scale-[1.02] hover:shadow-sm"
+              >
                 <div className="flex items-center space-x-3">
-                  <Calendar className="h-4 w-4 text-purple-600" />
-                  <span className="text-sm font-medium text-purple-900 group-hover:text-purple-700">Programma Follow-up</span>
+                  <Calendar className="h-4 w-4 text-purple-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium text-purple-900 group-hover:text-purple-700">Nuovo Appuntamento</span>
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => onQuickAction?.('claims')}
+                className="w-full text-left p-3 rounded-lg bg-red-50 hover:bg-red-100 transition-all duration-200 group hover:scale-[1.02] hover:shadow-sm"
+              >
+                <div className="flex items-center space-x-3">
+                  <FileText className="h-4 w-4 text-red-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium text-red-900 group-hover:text-red-700">Gestisci Sinistro</span>
+                </div>
+              </button>
+              
+              <button 
+                onClick={() => onQuickAction?.('documents')}
+                className="w-full text-left p-3 rounded-lg bg-orange-50 hover:bg-orange-100 transition-all duration-200 group hover:scale-[1.02] hover:shadow-sm"
+              >
+                <div className="flex items-center space-x-3">
+                  <Folder className="h-4 w-4 text-orange-600 group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-medium text-orange-900 group-hover:text-orange-700">Nuova Documentazione</span>
                 </div>
               </button>
             </div>

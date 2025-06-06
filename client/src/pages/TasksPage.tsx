@@ -1,8 +1,6 @@
-import { Plus } from "lucide-react";
 import { useState } from "react";
 import TaskList from "@/components/task-list";
 import TaskModal from "@/components/task-modal";
-import { Button } from "@/components/ui/button";
 import type { Task } from "@shared/schema";
 import Sidebar from "@/components/sidebar"; // Assumendo che la sidebar con il calendario sia utile qui
 
@@ -19,7 +17,6 @@ export default function TasksPage() {
   };
 
   const handleTaskEdit = (task: Task) => openModal(task);
-  const handleNewTask = () => openModal();
   const handleDateSelect = (date: string | null) => setSelectedDate(date);
 
   const handleCloseModal = () => {
@@ -43,10 +40,6 @@ export default function TasksPage() {
           onChange={(e) => handleSearch(e.target.value)}
           className="p-2 border rounded"
         /> */}
-        <Button onClick={handleNewTask} className="ml-auto">
-          <Plus className="h-5 w-5 mr-2" />
-          Nuova Attività
-        </Button>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
