@@ -5,6 +5,7 @@ import { insertTaskSchema, updateTaskSchema } from "@shared/schema";
 import { routePatterns, extractQueryFilters } from "./api-route-utils";
 import { exportRouter } from "./routes/export";
 import templateRouter from "./routes/templates.js";
+import { googleCalendarRoutes } from "./routes/googleCalendar";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // 📊 Export routes
@@ -12,6 +13,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // 🔄 Template routes (v1.1)
   app.use("/api/templates", templateRouter);
+
+  // 📅 Google Calendar routes (v1.1 Sprint 4)
+  app.use("/api/google-calendar", googleCalendarRoutes);
 
   // 🎯 OPTIMIZED: Task statistics endpoint
   app.get("/api/tasks/stats", 

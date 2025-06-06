@@ -105,7 +105,7 @@ export const googleCalendarConfig = pgTable("google_calendar_config", {
   id: serial("id").primaryKey(),
   userId: text("user_id").notNull().default("default"),
   accessToken: text("access_token").notNull(),
-  refreshToken: text("refresh_token").notNull(),
+  refreshToken: text("refresh_token"), // Nullable - Google può non fornirlo in alcuni casi
   tokenExpiresAt: timestamp("token_expires_at").notNull(),
   calendarId: text("calendar_id"), // Primary calendar ID
   syncEnabled: boolean("sync_enabled").notNull().default(true),
