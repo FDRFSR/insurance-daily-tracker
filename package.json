@@ -1,6 +1,6 @@
 {
   "name": "insuratask",
-  "version": "1.0.10",
+  "version": "1.1.0-dev",
   "type": "module",
   "license": "MIT",
   "description": "Gestione attività per agenti assicurativi",
