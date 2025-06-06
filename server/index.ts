@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { cronService } from "./services/cronService";
 import { templateService } from "./services/templateService";
+import attachmentsRouter from './routes/attachments';
 
 const app = express();
 app.use(express.json());
@@ -37,6 +38,8 @@ app.use((req, res, next) => {
 
   next();
 });
+
+app.use('/api/attachments', attachmentsRouter);
 
 (async () => {
   const server = await registerRoutes(app);

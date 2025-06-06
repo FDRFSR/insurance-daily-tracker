@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiRequest } from "@/lib/queryClient";
 import type { Task } from "@shared/schema";
+import FileUploader from './attachments/FileUploader';
+import AttachmentList from './attachments/AttachmentList';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -475,6 +477,14 @@ export default function TaskModal({
             </Button>
           </div>
         </form>
+
+        {task && task.id && (
+          <div className="mt-8">
+            <h3 className="font-semibold mb-2">Allegati</h3>
+            <FileUploader taskId={String(task.id)} />
+            <AttachmentList taskId={String(task.id)} />
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
