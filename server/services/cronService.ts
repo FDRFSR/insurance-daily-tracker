@@ -153,4 +153,19 @@ class CronService {
 }
 
 // Istanza singleton del servizio
-export const cronService = new CronService();
+const cronServiceInstance = new CronService();
+
+// Funzioni di compatibilità per l'uso nei route
+export async function scheduleTemplate(templateId: number, config: RecurrenceConfig): Promise<void> {
+  return cronServiceInstance.scheduleTemplate(templateId, config);
+}
+
+export async function unscheduleTemplate(templateId: number): Promise<void> {
+  return cronServiceInstance.unscheduleTemplate(templateId);
+}
+
+// Export default del servizio principale
+export default cronServiceInstance;
+
+// Named export per compatibilità
+export const cronService = cronServiceInstance;
