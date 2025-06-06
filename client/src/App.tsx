@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/contexts/UserContext";
 import DashboardOverviewPage from "@/pages/DashboardOverviewPage";
 import TasksPage from "@/pages/TasksPage";
+import { TemplatesPage } from "@/pages/templates";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -14,6 +15,7 @@ function Router() {
     <Switch>
       <Route path="/" component={DashboardOverviewPage} />
       <Route path="/tasks" component={TasksPage} />
+      <Route path="/templates" component={TemplatesPage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -29,6 +31,7 @@ function App() {
           <nav className="w-full bg-white shadow-sm mb-2 px-4 py-2 flex gap-4 rounded-xl">
             <a href="/" className="font-medium text-blue-700 hover:underline">Panoramica</a>
             <a href="/tasks" className="font-medium text-blue-700 hover:underline">Attività</a>
+            <a href="/templates" className="font-medium text-blue-700 hover:underline">Templates</a>
           </nav>
           <Toaster />
           <Router />

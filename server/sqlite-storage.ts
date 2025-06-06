@@ -22,6 +22,13 @@ export class SQLiteStorage implements IStorage {
     this.seedData();
   }
 
+  /**
+   * Metodo pubblico per accedere al database (per i servizi)
+   */
+  public getDatabase(): Database.Database {
+    return this.db;
+  }
+
   private initDatabase() {
     // Crea la tabella tasks se non esiste
     this.db.exec(`
@@ -39,6 +46,35 @@ export class SQLiteStorage implements IStorage {
         completed_at TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
+      )
+    `);
+
+    // V1.1: Crea tabelle per templates attività ricorrenti
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS templates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        title_template TEXT NOT NULL,
+        description_template TEXT,
+        priority TEXT NOT NULL DEFAULT 'medium',
+        recurrence_config TEXT NOT NULL,
+        is_active BOOLEAN NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )
+    `);
+
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS template_instances (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        template_id INTEGER NOT NULL,
+        task_id INTEGER,
+        scheduled_date TEXT NOT NULL,
+        executed_at TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (template_id) REFERENCES templates (id) ON DELETE CASCADE,
+        FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE SET NULL
       )
     `);
   }

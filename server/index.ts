@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { cronService } from "./services/cronService";
+import { templateService } from "./services/templateService";
 
 const app = express();
 app.use(express.json());
@@ -38,6 +40,16 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+
+  // Initialize cron service for template scheduling (v1.1)
+  try {
+    // Set up the circular dependency
+    cronService.setTemplateService(templateService);
+    await cronService.initialize();
+    console.log('✅ Template cron service initialized');
+  } catch (error) {
+    console.error("Failed to initialize cron service:", error);
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
