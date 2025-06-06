@@ -117,9 +117,9 @@ function filterTasks(tasks: Task[], filters: any): Task[] {
     }
     
     // Filtro per nome cliente
-    if (filters.clientName && task.clientName) {
+    if (filters.clientName && task.client) {
       const searchTerm = filters.clientName.toLowerCase();
-      if (!task.clientName.toLowerCase().includes(searchTerm)) {
+      if (!task.client.toLowerCase().includes(searchTerm)) {
         return false;
       }
     }

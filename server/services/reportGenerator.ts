@@ -134,8 +134,8 @@ export class ReportGenerator {
           this.getCategoryLabel(task.category),
           this.getPriorityLabel(task.priority),
           this.getStatusLabel(task.status),
-          new Date(task.dueDate).toLocaleDateString('it-IT'),
-          task.clientName || '',
+          task.dueDate ? new Date(task.dueDate).toLocaleDateString('it-IT') : '-',
+          task.client || '',
           new Date(task.createdAt).toLocaleDateString('it-IT'),
         ])
       ];
