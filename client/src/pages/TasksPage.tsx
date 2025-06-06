@@ -1,15 +1,11 @@
-import { Plus, Download } from "lucide-react";
 import { useState } from "react";
 import TaskList from "@/components/task-list";
 import TaskModal from "@/components/task-modal";
-import { Button } from "@/components/ui/button";
 import type { Task } from "@shared/schema";
 import Sidebar from "@/components/sidebar"; // Assumendo che la sidebar con il calendario sia utile qui
-import { ExportModal } from "@/components/export/ExportModal";
 
 export default function TasksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState(""); // Potrebbe essere gestito globalmente o passato come prop
@@ -21,7 +17,6 @@ export default function TasksPage() {
   };
 
   const handleTaskEdit = (task: Task) => openModal(task);
-  const handleNewTask = () => openModal();
   const handleDateSelect = (date: string | null) => setSelectedDate(date);
 
   const handleCloseModal = () => {
@@ -45,20 +40,6 @@ export default function TasksPage() {
           onChange={(e) => handleSearch(e.target.value)}
           className="p-2 border rounded"
         /> */}
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() => setIsExportModalOpen(true)}
-            className="flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Esporta
-          </Button>
-          <Button onClick={handleNewTask}>
-            <Plus className="h-5 w-5 mr-2" />
-            Nuova Attività
-          </Button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
@@ -90,12 +71,6 @@ export default function TasksPage() {
         onClose={handleCloseModal}
         task={editingTask}
         preselectedDate={selectedDate || undefined}
-      />
-      
-      {/* Modal Export */}
-      <ExportModal
-        open={isExportModalOpen}
-        onOpenChange={setIsExportModalOpen}
       />
     </div>
   );
