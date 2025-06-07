@@ -167,7 +167,7 @@ export default function GoogleCalendarSetup() {
           {!isConfigured ? (
             // Not configured - show setup
             <div className="space-y-4">
-              <Alert>
+              <Alert className="border-blue-200/50 bg-blue-50/30 rounded-xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   Google Calendar non è ancora configurato. Clicca il pulsante sotto per iniziare il processo di autenticazione.
@@ -199,7 +199,7 @@ export default function GoogleCalendarSetup() {
               <Button 
                 onClick={handleStartAuth}
                 disabled={isAuthenticating || authUrlMutation.isPending}
-                className="w-full"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0 shadow-lg transition-all duration-200"
                 size="lg"
               >
                 {isAuthenticating || authUrlMutation.isPending ? (
@@ -216,7 +216,7 @@ export default function GoogleCalendarSetup() {
               </Button>
 
               {isAuthenticating && (
-                <Alert>
+                <Alert className="border-blue-200/50 bg-blue-50/30 rounded-xl">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     Una finestra di autenticazione Google si è aperta. Completa l'autorizzazione e torna qui.
@@ -227,7 +227,7 @@ export default function GoogleCalendarSetup() {
           ) : (
             // Configured - show status and options
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50 dark:bg-green-950">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-green-50/80 to-green-50/40 border border-green-200/50 backdrop-blur-sm">
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <div>
@@ -239,7 +239,7 @@ export default function GoogleCalendarSetup() {
                     </div>
                   </div>
                 </div>
-                <Badge variant={syncEnabled ? 'default' : 'secondary'}>
+                <Badge variant={syncEnabled ? 'default' : 'secondary'} className="border-0 shadow-sm">
                   {syncEnabled ? 'Attivo' : 'Disattivato'}
                 </Badge>
               </div>

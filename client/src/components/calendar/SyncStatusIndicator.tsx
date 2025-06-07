@@ -235,12 +235,15 @@ const SyncStatusIndicator: React.FC = () => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge variant="secondary" className="cursor-help">
+            <Badge 
+              variant="secondary" 
+              className="cursor-help bg-gray-50/80 backdrop-blur-sm border border-gray-200/50 text-gray-600 hover:bg-gray-100/80 transition-colors rounded-lg shadow-sm"
+            >
               <WifiOff className="h-3 w-3 mr-1" />
               Google Calendar not configured
             </Badge>
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent className="bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-lg">
             <p>Set up Google Calendar integration to enable sync</p>
           </TooltipContent>
         </Tooltip>
@@ -249,17 +252,26 @@ const SyncStatusIndicator: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       {/* Sync Status Badge */}
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge variant={getSyncStatusVariant()} className="cursor-help">
+            <Badge 
+              variant={getSyncStatusVariant()} 
+              className={`cursor-help rounded-lg shadow-sm transition-all duration-200 hover:shadow-md ${
+                getSyncStatusVariant() === 'destructive' 
+                  ? 'bg-red-50/80 backdrop-blur-sm border border-red-200/50 text-red-700 hover:bg-red-100/80' 
+                  : getSyncStatusVariant() === 'outline'
+                  ? 'bg-yellow-50/80 backdrop-blur-sm border border-yellow-200/50 text-yellow-700 hover:bg-yellow-100/80'
+                  : 'bg-green-50/80 backdrop-blur-sm border border-green-200/50 text-green-700 hover:bg-green-100/80'
+              }`}
+            >
               {getSyncStatusIcon()}
-              <span className="ml-1">{getSyncStatusText()}</span>
+              <span className="ml-1 font-medium">{getSyncStatusText()}</span>
             </Badge>
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent className="bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-lg">
             <div className="space-y-1 text-sm">
               {syncStatus && (
                 <>
@@ -283,9 +295,12 @@ const SyncStatusIndicator: React.FC = () => {
 
       {/* Progress Bar (shown during sync) */}
       {syncProgress && (
-        <div className="flex items-center gap-2 min-w-[200px]">
-          <Progress value={syncProgress.current} className="flex-1" />
-          <span className="text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 min-w-[220px] bg-blue-50/80 backdrop-blur-sm border border-blue-200/50 rounded-lg px-3 py-2 shadow-sm">
+          <Progress 
+            value={syncProgress.current} 
+            className="flex-1 h-2 bg-blue-100 [&>div]:bg-gradient-to-r [&>div]:from-blue-500 [&>div]:to-blue-600" 
+          />
+          <span className="text-xs font-medium text-blue-700 min-w-[35px] text-right">
             {syncProgress.current}%
           </span>
         </div>
@@ -301,12 +316,12 @@ const SyncStatusIndicator: React.FC = () => {
                 size="sm"
                 onClick={handleManualSync}
                 disabled={syncProgress !== null || syncStatus?.syncInProgress}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 hover:bg-blue-50/80 hover:border-blue-200/50 rounded-lg transition-all duration-200 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <RefreshCw className={`h-4 w-4 ${syncProgress || syncStatus?.syncInProgress ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 text-blue-600 ${syncProgress || syncStatus?.syncInProgress ? 'animate-spin' : ''}`} />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent className="bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-lg">
               <p>Manual sync</p>
             </TooltipContent>
           </Tooltip>
@@ -319,12 +334,12 @@ const SyncStatusIndicator: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleTestConnection}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 hover:bg-green-50/80 hover:border-green-200/50 rounded-lg transition-all duration-200 hover:shadow-sm"
               >
-                <Wifi className="h-4 w-4" />
+                <Wifi className="h-4 w-4 text-green-600" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent className="bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-lg">
               <p>Test connection</p>
             </TooltipContent>
           </Tooltip>
@@ -332,16 +347,19 @@ const SyncStatusIndicator: React.FC = () => {
       </div>
 
       {/* Conflicts Count Badge */}
-      {syncStatus?.conflictsCount > 0 && (
+      {(syncStatus?.conflictsCount ?? 0) > 0 && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Badge variant="outline" className="cursor-help">
+              <Badge 
+                variant="outline" 
+                className="cursor-help bg-orange-50/80 backdrop-blur-sm border border-orange-200/50 text-orange-700 hover:bg-orange-100/80 transition-colors rounded-lg shadow-sm font-medium"
+              >
                 <AlertTriangle className="h-3 w-3 mr-1" />
-                {syncStatus.conflictsCount}
+                {syncStatus?.conflictsCount}
               </Badge>
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent className="bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-lg shadow-lg">
               <p>Click to resolve sync conflicts</p>
             </TooltipContent>
           </Tooltip>

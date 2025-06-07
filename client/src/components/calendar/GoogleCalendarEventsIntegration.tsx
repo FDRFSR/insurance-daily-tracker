@@ -120,9 +120,9 @@ export function CalendarEventsIntegration({ date, className = '' }: CalendarEven
         {events.map((event) => (
           <div
             key={event.id}
-            className="flex items-start space-x-2 p-2 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors"
+            className="flex items-start space-x-2 p-3 rounded-xl bg-blue-50/80 hover:bg-blue-100/80 transition-all duration-200 border border-blue-100/50 backdrop-blur-sm"
           >
-            <div className="w-3 h-3 rounded-full bg-blue-500 mt-0.5 flex-shrink-0" />
+            <div className="w-3 h-3 rounded-full bg-blue-500 mt-1 flex-shrink-0 shadow-sm" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
                 {event.title}
@@ -144,7 +144,7 @@ export function CalendarEventsIntegration({ date, className = '' }: CalendarEven
                 </p>
               )}
             </div>
-            <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0" />
+            <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0 mt-1" />
           </div>
         ))}
       </div>

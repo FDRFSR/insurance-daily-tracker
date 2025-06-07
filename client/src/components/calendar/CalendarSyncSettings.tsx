@@ -256,8 +256,8 @@ export default function CalendarSyncSettings() {
                 <Label>Direzione Sincronizzazione</Label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <Card 
-                    className={`cursor-pointer transition-colors ${
-                      syncDirection === 'bidirectional' ? 'border-primary bg-primary/5' : 'border-border'
+                    className={`cursor-pointer transition-all duration-200 rounded-xl border-0 shadow-md hover:shadow-lg ${
+                      syncDirection === 'bidirectional' ? 'bg-gradient-to-br from-blue-50 to-blue-50/30 ring-2 ring-blue-200' : 'bg-white/80 hover:bg-gray-50/80'
                     }`}
                     onClick={() => setSyncDirection('bidirectional')}
                   >
@@ -271,8 +271,8 @@ export default function CalendarSyncSettings() {
                   </Card>
                   
                   <Card 
-                    className={`cursor-pointer transition-colors ${
-                      syncDirection === 'import' ? 'border-primary bg-primary/5' : 'border-border'
+                    className={`cursor-pointer transition-all duration-200 rounded-xl border-0 shadow-md hover:shadow-lg ${
+                      syncDirection === 'import' ? 'bg-gradient-to-br from-green-50 to-green-50/30 ring-2 ring-green-200' : 'bg-white/80 hover:bg-gray-50/80'
                     }`}
                     onClick={() => setSyncDirection('import')}
                   >
@@ -286,8 +286,8 @@ export default function CalendarSyncSettings() {
                   </Card>
                   
                   <Card 
-                    className={`cursor-pointer transition-colors ${
-                      syncDirection === 'export' ? 'border-primary bg-primary/5' : 'border-border'
+                    className={`cursor-pointer transition-all duration-200 rounded-xl border-0 shadow-md hover:shadow-lg ${
+                      syncDirection === 'export' ? 'bg-gradient-to-br from-orange-50 to-orange-50/30 ring-2 ring-orange-200' : 'bg-white/80 hover:bg-gray-50/80'
                     }`}
                     onClick={() => setSyncDirection('export')}
                   >
@@ -364,41 +364,41 @@ export default function CalendarSyncSettings() {
                 variant="outline"
                 onClick={() => handleManualSync('bidirectional')}
                 disabled={syncMutation.isPending}
-                className="flex flex-col h-auto py-4"
+                className="flex flex-col h-auto py-4 rounded-xl border-0 bg-gradient-to-br from-blue-50 to-blue-50/30 hover:from-blue-100 hover:to-blue-100/50 shadow-md hover:shadow-lg transition-all duration-200"
               >
-                <ArrowLeftRight className="h-6 w-6 mb-2" />
-                <span className="font-medium">Sync Completo</span>
-                <span className="text-xs text-muted-foreground">Bidirezionale</span>
+                <ArrowLeftRight className="h-6 w-6 mb-2 text-blue-600" />
+                <span className="font-medium text-blue-800">Sync Completo</span>
+                <span className="text-xs text-blue-600">Bidirezionale</span>
               </Button>
 
               <Button
                 variant="outline"
                 onClick={() => handleManualSync('import')}
                 disabled={syncMutation.isPending}
-                className="flex flex-col h-auto py-4"
+                className="flex flex-col h-auto py-4 rounded-xl border-0 bg-gradient-to-br from-green-50 to-green-50/30 hover:from-green-100 hover:to-green-100/50 shadow-md hover:shadow-lg transition-all duration-200"
               >
-                <Download className="h-6 w-6 mb-2" />
-                <span className="font-medium">Import</span>
-                <span className="text-xs text-muted-foreground">Da Google Calendar</span>
+                <Download className="h-6 w-6 mb-2 text-green-600" />
+                <span className="font-medium text-green-800">Import</span>
+                <span className="text-xs text-green-600">Da Google Calendar</span>
               </Button>
 
               <Button
                 variant="outline"
                 onClick={() => handleManualSync('export')}
                 disabled={syncMutation.isPending}
-                className="flex flex-col h-auto py-4"
+                className="flex flex-col h-auto py-4 rounded-xl border-0 bg-gradient-to-br from-orange-50 to-orange-50/30 hover:from-orange-100 hover:to-orange-100/50 shadow-md hover:shadow-lg transition-all duration-200"
               >
-                <Upload className="h-6 w-6 mb-2" />
-                <span className="font-medium">Export</span>
-                <span className="text-xs text-muted-foreground">A Google Calendar</span>
+                <Upload className="h-6 w-6 mb-2 text-orange-600" />
+                <span className="font-medium text-orange-800">Export</span>
+                <span className="text-xs text-orange-600">A Google Calendar</span>
               </Button>
             </div>
 
             {syncMutation.isPending && (
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+              <div className="mt-4 p-4 bg-gradient-to-r from-blue-50/80 to-blue-50/40 rounded-xl border border-blue-200/50 backdrop-blur-sm">
                 <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">Sincronizzazione in corso...</span>
+                  <span className="text-sm font-medium">Sincronizzazione in corso...</span>
                 </div>
               </div>
             )}

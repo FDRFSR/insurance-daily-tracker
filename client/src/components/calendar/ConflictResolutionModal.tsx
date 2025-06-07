@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { Task } from '@/types/task';
+import type { Task } from '@shared/schema';
 
 interface CalendarEvent {
   id: string;
@@ -327,34 +327,32 @@ const ConflictCard: React.FC<ConflictCardProps> = ({
 
   const formatDateTime = (dateTime: string) => {
     return new Date(dateTime).toLocaleString();
-  };
-
-  return (
-    <Card className={`border-2 ${isSelected ? 'border-primary' : 'border-border'}`}>
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              checked={isSelected}
-              onChange={(e) => onSelectionChange(e.target.checked)}
-              className="mt-1"
-            />
-            <div>
-              <CardTitle className="flex items-center gap-2 text-base">
-                {getConflictTypeIcon(conflict.type)}
-                {getConflictTypeText(conflict.type)}
-              </CardTitle>
-              <CardDescription className="mt-1">
-                {conflict.conflictReason}
-              </CardDescription>
+  };    return (
+      <Card className={`border-2 rounded-xl transition-all duration-200 ${isSelected ? 'border-blue-500 bg-blue-50/30 ring-2 ring-blue-200/50' : 'border-gray-200 hover:border-gray-300'} shadow-sm hover:shadow-md`}>
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={(e) => onSelectionChange(e.target.checked)}
+                className="mt-1 rounded-md"
+              />
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  {getConflictTypeIcon(conflict.type)}
+                  {getConflictTypeText(conflict.type)}
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  {conflict.conflictReason}
+                </CardDescription>
+              </div>
             </div>
+            <Badge variant="outline" className="text-xs border-0 bg-gray-100/80">
+              {formatDateTime(conflict.detectedAt)}
+            </Badge>
           </div>
-          <Badge variant="outline" className="text-xs">
-            {formatDateTime(conflict.detectedAt)}
-          </Badge>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
       <CardContent className="space-y-4">
         {/* Comparison View */}
@@ -476,7 +474,7 @@ const ConflictCard: React.FC<ConflictCardProps> = ({
               variant={getResolutionButtonVariant('KEEP_TASK')}
               size="sm"
               onClick={() => onResolutionChange('KEEP_TASK')}
-              className="justify-start"
+              className="justify-start rounded-lg border-0 transition-all duration-200 hover:shadow-md"
             >
               <FileText className="h-4 w-4 mr-2" />
               Keep Task
@@ -485,7 +483,7 @@ const ConflictCard: React.FC<ConflictCardProps> = ({
               variant={getResolutionButtonVariant('KEEP_GOOGLE')}
               size="sm"
               onClick={() => onResolutionChange('KEEP_GOOGLE')}
-              className="justify-start"
+              className="justify-start rounded-lg border-0 transition-all duration-200 hover:shadow-md"
             >
               <Calendar className="h-4 w-4 mr-2" />
               Keep Google
@@ -494,7 +492,7 @@ const ConflictCard: React.FC<ConflictCardProps> = ({
               variant={getResolutionButtonVariant('MERGE')}
               size="sm"
               onClick={() => onResolutionChange('MERGE')}
-              className="justify-start"
+              className="justify-start rounded-lg border-0 transition-all duration-200 hover:shadow-md"
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
               Merge Both
@@ -503,22 +501,25 @@ const ConflictCard: React.FC<ConflictCardProps> = ({
               variant={getResolutionButtonVariant('SKIP')}
               size="sm"
               onClick={() => onResolutionChange('SKIP')}
-              className="justify-start"
+              className="justify-start rounded-lg border-0 transition-all duration-200 hover:shadow-md"
             >
               <Clock className="h-4 w-4 mr-2" />
               Skip
             </Button>
           </div>
           {resolution && (
-            <div className="text-sm text-muted-foreground">
-              <strong>Selected:</strong> {
+            <div className="text-sm p-3 bg-gradient-to-r from-green-50/80 to-green-50/40 rounded-lg border border-green-200/50">
+              <strong className="text-green-800">Selected:</strong> 
+              <span className="text-green-700 ml-1">
                 {
-                  'KEEP_TASK': 'Keep InsuraTask version and overwrite Google Calendar',
-                  'KEEP_GOOGLE': 'Keep Google Calendar version and overwrite InsuraTask',
-                  'MERGE': 'Attempt to merge both versions intelligently',
-                  'SKIP': 'Skip this conflict for now'
-                }[resolution]
-              }
+                  {
+                    'KEEP_TASK': 'Keep InsuraTask version and overwrite Google Calendar',
+                    'KEEP_GOOGLE': 'Keep Google Calendar version and overwrite InsuraTask',
+                    'MERGE': 'Attempt to merge both versions intelligently',
+                    'SKIP': 'Skip this conflict for now'
+                  }[resolution]
+                }
+              </span>
             </div>
           )}
         </div>

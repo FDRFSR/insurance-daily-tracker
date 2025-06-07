@@ -43,7 +43,7 @@ const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps> = ({ c
                   variant="outline"
                   size="sm"
                   onClick={() => setShowConflictModal(true)}
-                  className="text-yellow-600 border-yellow-300"
+                  className="text-yellow-600 border-yellow-300 hover:bg-yellow-50 rounded-lg transition-all duration-200"
                 >
                   <AlertTriangle className="h-4 w-4 mr-1" />
                   {conflictsData.data.length} Conflicts
@@ -57,12 +57,12 @@ const GoogleCalendarIntegration: React.FC<GoogleCalendarIntegrationProps> = ({ c
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="setup" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="setup" className="flex items-center gap-2">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-100/80 rounded-xl">
+              <TabsTrigger value="setup" className="flex items-center gap-2 rounded-lg">
                 <Calendar className="h-4 w-4" />
                 Setup
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex items-center gap-2">
+              <TabsTrigger value="settings" className="flex items-center gap-2 rounded-lg">
                 <Settings className="h-4 w-4" />
                 Sincronizzazione
               </TabsTrigger>
