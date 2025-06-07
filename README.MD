@@ -1,7 +1,8 @@
-# 🛡️ InsuraTask
+# 🛡️ InsuraTask v1.1
 
 **Una moderna applicazione web e desktop per la gestione delle attività di agenti assicurativi**
 
+[![Version](https://img.shields.io/badge/version-1.1.0--dev-blue?style=for-the-badge)](https://github.com/FDRFSR/insurance-daily-tracker)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
@@ -36,32 +37,44 @@ InsuraTask è una soluzione completa per agenti assicurativi che vogliono ottimi
 
 ## ✨ Funzionalità Principali
 
-### 📊 Dashboard Intelligente
+### 📊 Dashboard Intelligente v1.1
 - **Statistiche real-time**: Panoramica delle attività totali, in scadenza, completate
+- **Analytics Avanzate**: Grafici interattivi per trend, distribuzioni e performance
 - **Notifiche smart**: Alert per attività in ritardo e scadenze del giorno
 - **Metriche visuali**: Card colorate con icone specifiche per ogni categoria
+- **Export Professionale**: Report PDF/Excel con branding e statistiche integrate
 
 ### 📅 Gestione Attività Avanzata
 - **CRUD completo**: Crea, modifica, elimina e visualizza attività
 - **Categorie specializzate**: Chiamate, Preventivi, Sinistri, Documenti, Appuntamenti
 - **Priorità e stati**: Sistema di priorità (bassa/media/alta) e stati (pending/completed/overdue)
 - **Ricerca potente**: Filtro per categoria, ricerca testuale su titolo/descrizione/cliente
+- **File Attachments**: Allegati per ogni attività con preview integrato
 
-### 🗓️ Calendario Integrato
-- **Vista mensile**: Navigazione fluida tra i mesi
-- **Indicatori eventi**: Punti colorati per categoria di attività
-- **Selezione date**: Filtro attività per data specifica
-- **Dettaglio giornaliero**: Popover con riepilogo attività del giorno
+### 🗓️ Calendario Interattivo (Enhanced Calendar)
+- **Vista mensile avanzata**: Navigazione fluida con indicatori eventi per giorno
+- **Popover dettagliati**: Click su ogni giorno per vedere attività complete
+- **Indicatori categorizzati**: Punti colorati per tipo di attività
+- **Priority indicators**: Icone speciali per alta priorità e scadenze
+- **Integrazione filtri**: Selezione date sincronizzata con task list
 
-### ⚡ Azioni Rapide
-- **Quick actions**: Bottoni per creazione veloce per categoria
-- **Form pre-compilati**: Categoria e data già selezionate
-- **Workflow ottimizzato**: Riduzione dei click per attività comuni
+### ⚡ Quick Actions & Shortcuts v1.1
+- **6 Azioni rapide**: Bottoni categorizzati per creazione veloce attività
+- **Keyboard shortcuts**: Scorciatoie complete (Ctrl+N, Q, A, S, F, T)
+- **Visual feedback**: Animazioni hover e feedback visivo professionale
+- **Form pre-compilati**: Categoria e data già selezionate per workflow ottimizzato
+- **Cross-platform**: Supporto Ctrl/Cmd per Windows/Mac
 
 ### 👤 Gestione Profilo
 - **Profilo personalizzabile**: Nome, email, ruolo, azienda
 - **Preferenze utente**: Tema chiaro/scuro, lingua, notifiche
 - **Persistenza locale**: Salvataggio automatico delle preferenze
+
+### 📈 Reporting & Analytics v1.1
+- **Grafici interattivi**: Trend settimanali, performance giornaliere, distribuzioni
+- **Export avanzato**: PDF e Excel con filtri personalizzabili
+- **Metriche real-time**: Tasso completamento, efficienza, clienti da ricontattare
+- **Dashboard toggle**: Visualizzazione analytics opzionale per interfaccia pulita
 
 ---
 
@@ -75,6 +88,8 @@ InsuraTask è una soluzione completa per agenti assicurativi che vogliono ottimi
 - **shadcn/ui + Radix UI** - Componenti accessibili e customizzabili
 - **TanStack Query** - Data fetching e caching intelligente
 - **React Hook Form + Zod** - Form management e validazione
+- **Chart.js + Recharts** - 📈 Grafici interattivi e analytics (v1.1)
+- **React-ChartJS-2** - 📊 Integrazione React per Chart.js (v1.1)
 
 ### Backend
 - **Node.js + TypeScript** - Runtime JavaScript server-side
@@ -82,12 +97,23 @@ InsuraTask è una soluzione completa per agenti assicurativi che vogliono ottimi
 - **SQLite + better-sqlite3** - Database embedded performante
 - **Zod** - Schema validation condivisa
 - **Drizzle ORM** - Type-safe database queries
+- **Multer** - 📎 File upload middleware (v1.1)
+- **jsPDF + jsPDF-AutoTable** - 📄 Generazione PDF professionale (v1.1)
+- **XLSX** - 📊 Export Excel con formattazione (v1.1)
+- **Node-Cron** - 🔄 Scheduler per automazione (v1.1)
+
+### Google Integration (Preparato per v1.3)
+- **Google APIs** - Client per Google Calendar
+- **Google Auth Library** - OAuth2 authentication
+- **Googleapis** - SDK completo Google Services
 
 ### DevOps & Tools
 - **ESLint + TypeScript** - Code quality e type checking
 - **PostCSS + Autoprefixer** - CSS processing
 - **Wouter** - Routing leggero
 - **tsx** - TypeScript execution per development
+- **Electron** - Desktop app wrapper
+- **PKG** - Standalone executables
 
 ---
 
@@ -99,15 +125,26 @@ insuratask/
 │   ├── src/
 │   │   ├── components/     # Componenti riutilizzabili
 │   │   │   ├── ui/        # UI components (shadcn/ui)
+│   │   │   ├── export/    # 📊 Export components (v1.1)
+│   │   │   │   └── ExportModal.tsx
+│   │   │   ├── attachments/ # 📎 File management (v1.1)
+│   │   │   │   ├── FileUploader.tsx
+│   │   │   │   ├── AttachmentList.tsx
+│   │   │   │   └── FilePreview.tsx
 │   │   │   ├── header.tsx
 │   │   │   ├── sidebar.tsx
 │   │   │   ├── task-list.tsx
 │   │   │   ├── task-modal.tsx
-│   │   │   └── enhanced-calendar.tsx
+│   │   │   ├── enhanced-calendar.tsx  # 📅 Enhanced (v1.1)
+│   │   │   └── dashboard-charts.tsx   # 📈 Analytics (v1.1)
 │   │   ├── contexts/       # React Context providers
 │   │   ├── hooks/          # Custom hooks
 │   │   ├── lib/            # Utility functions
 │   │   ├── pages/          # Page components
+│   │   ├── services/       # API services
+│   │   │   └── exportService.ts  # 📊 Export API (v1.1)
+│   │   ├── types/          # TypeScript definitions
+│   │   │   └── export.ts   # 📊 Export types (v1.1)
 │   │   └── main.tsx        # Entry point
 │   └── index.html
 ├── server/                 # Backend Express
@@ -115,13 +152,30 @@ insuratask/
 │   ├── routes.ts          # API routes definition
 │   ├── storage.ts         # Data layer interface
 │   ├── sqlite-storage.ts  # SQLite implementation
+│   ├── middleware/        # 📎 Middleware (v1.1)
+│   │   └── fileUpload.ts  # Multer configuration
+│   ├── routes/            # 📊 API routes (v1.1)
+│   │   ├── export.ts      # Export endpoints
+│   │   ├── attachments.ts # File management
+│   │   └── templates.ts   # Template CRUD (preparato)
+│   ├── services/          # 🔧 Business logic (v1.1)
+│   │   ├── reportGenerator.ts  # PDF/Excel generation
+│   │   └── cronService.ts      # Job scheduler
 │   └── vite.ts            # Vite integration
 ├── shared/                # Codice condiviso
-│   └── schema.ts          # Zod schemas e types
+│   ├── schema.ts          # Zod schemas e types
+│   ├── schemas/           # 📊 Schema validation (v1.1)
+│   │   └── export.ts      # Export request schemas
+│   └── types/             # 📊 Type definitions (v1.1)
+│       ├── export.ts      # Export data types
+│       ├── template.ts    # Template types (preparato)
+│       └── attachment.ts  # Attachment types
 ├── electron/              # Wrapper Electron per desktop app
 ├── screenshots/           # Screenshot per la documentazione
+├── uploads/               # 📎 File storage (v1.1)
+│   └── metadata/          # File metadata storage
 ├── dist-pkg/              # Build standalone desktop
-├── package.json
+├── package.json           # Dependencies (aggiornato v1.1)
 ├── tsconfig.json
 ├── tailwind.config.ts
 ├── vite.config.ts
@@ -143,6 +197,27 @@ insuratask/
 | `DELETE` | `/api/tasks/:id` | Elimina attività |
 | `GET` | `/api/tasks/stats` | Statistiche dashboard |
 
+### 📊 Nuovi Endpoints v1.1 - Export & Files
+
+| Metodo | Endpoint | Descrizione |
+|--------|----------|-------------|
+| `POST` | `/api/export` | Genera report PDF/Excel |
+| `POST` | `/api/export/preview` | Anteprima dati export |
+| `POST` | `/api/attachments/upload` | Upload file allegati |
+| `GET` | `/api/attachments/:taskId` | Lista allegati per attività |
+| `DELETE` | `/api/attachments/:id` | Elimina allegato |
+| `GET` | `/api/attachments/download/:id` | Download file allegato |
+
+### 🔄 Endpoints Templates (Preparati v1.2)
+
+| Metodo | Endpoint | Descrizione |
+|--------|----------|-------------|
+| `GET` | `/api/templates` | Lista template disponibili |
+| `POST` | `/api/templates` | Crea nuovo template |
+| `PATCH` | `/api/templates/:id` | Aggiorna template |
+| `DELETE` | `/api/templates/:id` | Elimina template |
+| `POST` | `/api/templates/:id/generate` | Genera task da template |
+
 ### Query Parameters
 
 ```bash
@@ -159,7 +234,27 @@ GET /api/tasks?search=mario+rossi
 GET /api/tasks?category=quotes&status=pending&search=preventivo
 ```
 
-### Esempio Request/Response
+### 📊 Esempio Export Request (v1.1)
+
+**POST /api/export**
+```json
+{
+  "format": "pdf",  // "pdf" | "excel"
+  "title": "Report Attività Settimanali",
+  "filters": {
+    "category": "calls",
+    "status": "pending",
+    "dateFrom": "2025-06-01",
+    "dateTo": "2025-06-07",
+    "client": "Mario Rossi"
+  },
+  "includeStats": true
+}
+```
+
+**Response:** File download (application/pdf o application/xlsx)
+
+### Esempio Task Request/Response
 
 **POST /api/tasks**
 ```json
@@ -299,14 +394,61 @@ Le contribuzioni sono benvenute! Per contribuire al progetto:
 
 ---
 
-## 🔮 Roadmap
+## 🆕 Novità v1.1 - Enhanced Features
 
-### v1.1 - Enhanced Features
-- [ ] Integrazione Google Calendar
-- [ ] Export dati in PDF/Excel  
-- [ ] Templates attività ricorrenti
-- [ ] Attachment files alle attività
-- [ ] Reporting avanzato con grafici
+### ✅ **IMPLEMENTATO - v1.1.0**
+
+#### 📊 **Export Avanzato PDF/Excel**
+- **Export PDF Professionale**: Report con branding InsuraTask, layout curato e statistiche integrate
+- **Export Excel Formattato**: Fogli di calcolo con formattazione, filtri e grafici integrati
+- **Filtri Avanzati**: Export personalizzabile per data, categoria, stato, priorità e cliente
+- **Preview Real-time**: Anteprima dei dati prima della generazione del report
+- **Download Automatico**: Generazione e download immediato dei file
+
+#### 📅 **Calendario Avanzato (Enhanced Calendar)**
+- **Vista Mensile Interattiva**: Navigazione fluida con indicatori visuali per ogni giorno
+- **Popover Dettagliati**: Click sui giorni per vedere dettagli completi delle attività
+- **Indicatori Categorizzati**: Punti colorati per tipo di attività (chiamate, preventivi, etc.)
+- **Priority & Status Indicators**: Icone speciali per priorità alta e attività in ritardo
+- **Integrazione Perfetta**: Sincronizzazione con task list e filtri data
+
+#### ⚡ **Sistema Quick Actions Avanzato**
+- **6 Azioni Rapide**: Bottoni categorizzati per creazione veloce attività
+  - 🔵 **Nuova Chiamata** - Chiamate clienti
+  - 🟢 **Preventivo** - Quotazioni e preventivi  
+  - 🟣 **Appuntamento** - Meeting e appuntamenti
+  - 🔴 **Sinistro** - Gestione sinistri
+  - 🟠 **Cliente** - Nuovi clienti
+  - 🟦 **Traccia Tempo** - Amministrazione
+- **Keyboard Shortcuts**: Scorciatoie complete (Ctrl+N, Q, A, S, F, T)
+- **Visual Feedback**: Animazioni hover e feedback visivo per azioni
+
+#### 📈 **Analytics & Reporting Avanzato**
+- **Dashboard Charts Interattivi**: Grafici settimanali, trend giornalieri, distribuzioni
+- **Metriche Real-time**: Statistiche live su completamento, efficienza e performance
+- **Clienti da Ricontattare**: Sistema intelligente per identificare follow-up necessari
+- **Toggle Analytics**: Visualizzazione opzionale per interfaccia pulita
+
+#### 📎 **Sistema File Attachments**
+- **Upload Sicuro**: Gestione allegati per ogni attività
+- **Preview Integrato**: Anteprima file supportati direttamente nell'interfaccia
+- **Gestione Avanzata**: Organizzazione, download e rimozione allegati
+- **Validazione File**: Controllo tipi e dimensioni file supportati
+
+#### 🔄 **Infrastructure per Templates (Preparato)**
+- **Sistema Template**: Base per attività ricorrenti (pronto per implementazione)
+- **Cron Jobs Service**: Scheduler per automazione attività
+- **Template Engine**: Placeholder dinamici e personalizzazione
+
+### 🎨 **Miglioramenti UI/UX v1.1**
+- **Glassmorphism Design**: Effetti moderni con backdrop-blur e gradienti
+- **Responsive Perfetto**: Layout ottimizzato per mobile, tablet e desktop
+- **Micro-interactions**: Animazioni fluide e feedback visivo professionale
+- **Color-coded Categories**: Sistema di colori coerente per categorizzazione immediata
+
+---
+
+## 🔮 Roadmap Future
 
 ### v1.2 - Collaboration
 - [ ] Multi-utente con permessi
@@ -314,12 +456,18 @@ Le contribuzioni sono benvenute! Per contribuire al progetto:
 - [ ] Comments e note collaborativi
 - [ ] Audit log delle modifiche
 
+### v1.3 - Google Integration
+- [ ] Integrazione Google Calendar completa
+- [ ] Sincronizzazione bidirezionale eventi
+- [ ] OAuth2 e gestione account Google
+- [ ] Conflict resolution automatico
+
 ### v2.0 - Advanced Features
 - [ ] Mobile app nativa
 - [ ] Modalità offline
 - [ ] Integrazione CRM esterni
 - [ ] API pubblica per integrazioni
-- [ ] Dashboard analytics avanzate
+- [ ] Templates ricorrenti automatici
 
 ---
 
