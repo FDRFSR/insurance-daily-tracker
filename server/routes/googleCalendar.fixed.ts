@@ -109,7 +109,7 @@ router.post('/auth-callback', async (req: Request, res: Response) => {
     const primaryCalendar = calendars.find((cal: any) => cal.primary) || calendars[0];
 
     // Salva configurazione nel database
-    await googleCalendarDb.createGoogleCalendarConfig({
+    await googleCalendarDb.saveGoogleCalendarConfig({
       userId: 'default',
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token || null,
@@ -147,7 +147,7 @@ router.post('/auth-callback', async (req: Request, res: Response) => {
  */
 router.delete('/auth', async (req: Request, res: Response) => {
   try {
-    const config = googleCalendarDatabase.getGoogleCalendarConfig();
+    const config = googleCalendarDb.getGoogleCalendarConfig();
     
     if (config) {
       // Revoca tokens
@@ -159,7 +159,7 @@ router.delete('/auth', async (req: Request, res: Response) => {
       }
 
       // Elimina configurazione dal database
-      await googleCalendarDatabase.deleteGoogleCalendarConfig(config.id);
+      await googleCalendarDb.deleteGoogleCalendarConfig('default');
     }
 
     res.json({
@@ -188,7 +188,7 @@ router.delete('/auth', async (req: Request, res: Response) => {
  */
 router.get('/config', async (req: Request, res: Response) => {
   try {
-    const config = googleCalendarDatabase.getGoogleCalendarConfig();
+    const config = googleCalendarDb.getGoogleCalendarConfig();
     
     if (!config) {
       return res.json({
@@ -241,7 +241,7 @@ router.put('/config', async (req: Request, res: Response) => {
       });
     }
 
-    const config = googleCalendarDatabase.getGoogleCalendarConfig();
+    const config = googleCalendarDb.getGoogleCalendarConfig();
     if (!config) {
       return res.status(404).json({
         success: false,
@@ -250,7 +250,8 @@ router.put('/config', async (req: Request, res: Response) => {
     }
 
     // Aggiorna configurazione
-    await googleCalendarDatabase.updateGoogleCalendarConfig(config.id, {
+    await googleCalendarDb.saveGoogleCalendarConfig({
+      ...config,
       calendarId: result.data.calendarId || config.calendarId,
       syncEnabled: result.data.syncEnabled,
       syncDirection: result.data.syncDirection
@@ -278,7 +279,7 @@ router.put('/config', async (req: Request, res: Response) => {
  */
 router.get('/calendars', async (req: Request, res: Response) => {
   try {
-    const config = googleCalendarDatabase.getGoogleCalendarConfig();
+    const config = googleCalendarDb.getGoogleCalendarConfig();
     if (!config) {
       return res.status(401).json({
         success: false,
@@ -330,7 +331,7 @@ router.post('/sync', async (req: Request, res: Response) => {
       });
     }
 
-    const config = googleCalendarDatabase.getGoogleCalendarConfig();
+    const config = googleCalendarDb.getGoogleCalendarConfig();
     if (!config || !config.syncEnabled) {
       return res.status(400).json({
         success: false,
@@ -465,8 +466,8 @@ router.delete('/sync/task/:id', async (req: Request, res: Response) => {
  */
 router.get('/sync/conflicts', async (req: Request, res: Response) => {
   try {
-    const conflictedMappings = googleCalendarDatabase.getConflictedMappings();
-    const pendingMappings = googleCalendarDatabase.getPendingMappings();
+    const conflictedMappings = googleCalendarDb.getConflictedMappings();
+    const pendingMappings = googleCalendarDb.getPendingMappings();
     
     res.json({
       success: true,
@@ -495,7 +496,7 @@ router.get('/sync/conflicts', async (req: Request, res: Response) => {
 router.get('/audit', async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 50;
-    const auditLogs = googleCalendarDatabase.getRecentSyncAudits(Math.min(limit, 200));
+    const auditLogs = googleCalendarDb.getRecentAuditLogs(Math.min(limit, 200));
     
     res.json({
       success: true,
@@ -523,7 +524,7 @@ router.get('/audit', async (req: Request, res: Response) => {
  */
 router.post('/test-connection', async (req: Request, res: Response) => {
   try {
-    const config = googleCalendarDatabase.getGoogleCalendarConfig();
+    const config = googleCalendarDb.getGoogleCalendarConfig();
     if (!config) {
       return res.status(400).json({
         success: false,
