@@ -28,12 +28,6 @@
 }
 
 @layer base {
-  * {
-    border-color: var(--border);
-    outline-color: var(--border);
-    border-radius: 1.5rem;
-  }
-
   body {
     background-color: var(--background);
     color: var(--foreground);
@@ -46,38 +40,60 @@
     box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
   }
 
-  /* Ensure inputs have consistent borders */
-  input, select, textarea, button {
-    border-radius: 1.5rem;
+  /* Ensure inputs have consistent borders and rounded corners */
+  input, select, textarea {
+    border-radius: 0.75rem;
+    border-color: var(--border);
     transition: box-shadow 0.2s, border-color 0.2s;
-  }
-
-  /* Card, modal, popup: effetto sollevato e bordi molto morbidi */
-  .card, .modal, .popup, .dialog, .sheet {
-    border-radius: 2rem;
-    box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08), 0 1.5px 4px 0 rgba(0,0,0,0.03);
-    background: var(--background);
-    border: 1px solid var(--border);
-  }
-
-  /* Tooltip e dropdown anch'essi arrotondati */
-  .tooltip, .dropdown {
-    border-radius: 1.25rem;
-    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
-    background: var(--background);
-    border: 1px solid var(--border);
   }
 
   input:focus, select:focus, textarea:focus {
     border-color: var(--ring);
   }
 
-  /* Ensure buttons have consistent borders */
+  /* Button styling - consistent rounded corners */
   button {
+    border-radius: 0.75rem;
     border-color: var(--border);
+    transition: box-shadow 0.2s, border-color 0.2s;
   }
+  
   button:hover, button:focus {
     border-color: var(--ring);
+  }
+
+  /* Card components - consistent modern styling */
+  [data-ui="card"], .card {
+    border-radius: 1rem;
+    box-shadow: 0 4px 24px 0 rgba(0,0,0,0.08), 0 1.5px 4px 0 rgba(0,0,0,0.03);
+    background: var(--background);
+    border: 1px solid var(--border);
+  }
+
+  /* Dialog and modal styling */
+  [data-ui="dialog"], [data-ui="modal"], .dialog, .modal {
+    border-radius: 1.25rem;
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.12), 0 2px 8px 0 rgba(0,0,0,0.04);
+    background: var(--background);
+    border: 1px solid var(--border);
+  }
+
+  /* Tooltip and dropdown styling */
+  [data-ui="tooltip"], [data-ui="dropdown"], .tooltip, .dropdown {
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.10);
+    background: var(--background);
+    border: 1px solid var(--border);
+  }
+
+  /* Badge and pill components */
+  [data-ui="badge"], .badge {
+    border-radius: 0.5rem;
+  }
+
+  /* Small interactive elements */
+  [data-ui="switch"], [data-ui="checkbox"], [data-ui="radio"] {
+    border-radius: 0.375rem;
   }
 }
 

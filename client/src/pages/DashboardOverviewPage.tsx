@@ -7,6 +7,7 @@ import TaskModal from "@/components/task-modal";
 import { ExportModal } from "@/components/export/ExportModal";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import GoogleCalendarIntegration from "@/components/calendar/GoogleCalendarIntegration";
 import type { Task } from "@shared/schema";
 
 interface RecentTask {
@@ -125,6 +126,17 @@ export default function DashboardOverviewPage() {
             </Button>
           </div>
           <DashboardCharts />
+        </section>
+        <hr className="my-2 border-gray-200" />
+
+        {/* Sezione Google Calendar Integration */}
+        <section aria-labelledby="calendar-integration-heading" className="space-y-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <h2 id="calendar-integration-heading" className="text-lg font-semibold text-gray-900 tracking-tight">Sincronizzazione Calendar</h2>
+          </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <GoogleCalendarIntegration />
+          </div>
         </section>
         <hr className="my-2 border-gray-200" />
 

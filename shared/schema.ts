@@ -99,3 +99,48 @@ export type InsertTemplate = z.infer<typeof insertTemplateSchema>;
 export type UpdateTemplate = z.infer<typeof updateTemplateSchema>;
 export type RecurrenceConfig = z.infer<typeof recurrenceConfigSchema>;
 export type TemplateInstance = typeof templateInstances.$inferSelect;
+
+// Google Calendar integration schema
+export const googleCalendarConfig = pgTable("google_calendar_config", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().default("default"),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"), // Nullable - Google può non fornirlo in alcuni casi
+  tokenExpiresAt: timestamp("token_expires_at").notNull(),
+  calendarId: text("calendar_id"), // Primary calendar ID
+  syncEnabled: boolean("sync_enabled").notNull().default(true),
+  lastSyncAt: timestamp("last_sync_at"),
+  syncDirection: varchar("sync_direction", { length: 20 }).notNull().default("bidirectional"), // 'import', 'export', 'bidirectional'
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Mapping between InsuraTask tasks and Google Calendar events
+export const taskCalendarMapping = pgTable("task_calendar_mapping", {
+  id: serial("id").primaryKey(),
+  taskId: integer("task_id").notNull().references(() => tasks.id),
+  googleEventId: text("google_event_id").notNull(),
+  calendarId: text("calendar_id").notNull(),
+  lastSyncedAt: timestamp("last_synced_at").notNull().defaultNow(),
+  syncStatus: varchar("sync_status", { length: 20 }).notNull().default("synced"), // 'synced', 'conflict', 'pending'
+});
+
+// Google Calendar schemas
+export const insertGoogleCalendarConfigSchema = createInsertSchema(googleCalendarConfig).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updateGoogleCalendarConfigSchema = insertGoogleCalendarConfigSchema.partial();
+
+export const insertTaskCalendarMappingSchema = createInsertSchema(taskCalendarMapping).omit({
+  id: true,
+  lastSyncedAt: true,
+});
+
+export type GoogleCalendarConfig = typeof googleCalendarConfig.$inferSelect;
+export type InsertGoogleCalendarConfig = z.infer<typeof insertGoogleCalendarConfigSchema>;
+export type UpdateGoogleCalendarConfig = z.infer<typeof updateGoogleCalendarConfigSchema>;
+export type TaskCalendarMapping = typeof taskCalendarMapping.$inferSelect;
+export type InsertTaskCalendarMapping = z.infer<typeof insertTaskCalendarMappingSchema>;

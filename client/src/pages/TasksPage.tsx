@@ -2,44 +2,43 @@ import { useState } from "react";
 import TaskList from "@/components/task-list";
 import TaskModal from "@/components/task-modal";
 import type { Task } from "@shared/schema";
-import Sidebar from "@/components/sidebar"; // Assumendo che la sidebar con il calendario sia utile qui
+import EnhancedCalendar from "@/components/enhanced-calendar";
+import GoogleCalendarIntegration from "@/components/calendar/GoogleCalendarIntegration";
 
 export default function TasksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState(""); // Potrebbe essere gestito globalmente o passato come prop
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Unified modal handler
   const openModal = (task: Task | null = null) => {
     setEditingTask(task);
     setIsModalOpen(true);
   };
 
   const handleTaskEdit = (task: Task) => openModal(task);
-  const handleDateSelect = (date: string | null) => setSelectedDate(date);
+  const handleDateSelect = (date: string) => {
+    // Toggle behavior: if clicking the same date, deselect it
+    setSelectedDate(selectedDate === date ? null : date);
+  };
+  
+  const handleDateTaskCreate = (date: string) => {
+    // Open task modal with preselected date
+    setSelectedDate(date);
+    setEditingTask(null);
+    setIsModalOpen(true);
+  };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingTask(null);
   };
 
-  // Funzione per aggiornare la searchQuery, se gestita localmente
-  // const handleSearch = (query: string) => setSearchQuery(query);
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-      {/* Header della Pagina Attività (opzionale, potrebbe essere parte di un AppHeader globale) */}
+      {/* Header della Pagina Attività */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Gestione Attività</h1>
-        {/* Input di ricerca potrebbe andare qui o nell'AppHeader */}
-        {/* <input 
-          type="text" 
-          placeholder="Cerca attività..." 
-          value={searchQuery} 
-          onChange={(e) => handleSearch(e.target.value)}
-          className="p-2 border rounded"
-        /> */}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
@@ -48,19 +47,20 @@ export default function TasksPage() {
           <TaskList 
             onTaskEdit={handleTaskEdit} 
             selectedDate={selectedDate}
-            searchQuery={searchQuery} // Passa la searchQuery alla TaskList
+            searchQuery={searchQuery}
           />
         </div>
-        
-        {/* Sidebar con calendario */}
+         {/* Sidebar con calendario e Google Calendar Integration */}
         <div className="xl:col-span-1">
           <div className="sticky top-6 space-y-6">
-            <Sidebar 
-              onDateSelect={handleDateSelect}
-              selectedDate={selectedDate}
-              // Potremmo voler rimuovere gli "Insights Rapidi" da questa sidebar
-              // se la sidebar diventa più generica per la navigazione/calendario
+            {/* Enhanced Calendar con Google Calendar Integration */}
+            <EnhancedCalendar 
+              onDateClick={handleDateSelect}
+              onTaskClick={handleTaskEdit}
             />
+
+            {/* Google Calendar Integration */}
+            <GoogleCalendarIntegration className="mt-6" />
           </div>
         </div>
       </div>

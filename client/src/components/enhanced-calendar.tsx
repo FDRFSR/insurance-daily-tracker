@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Task } from "@shared/schema";
+// Google Calendar integration
+import { CalendarEventsIntegration, useGoogleCalendarEvents, GoogleCalendarIndicator } from "./calendar/GoogleCalendarEventsIntegration";
 
 interface EnhancedCalendarProps {
   onDateClick?: (date: string) => void;
@@ -19,6 +21,17 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
   const { data: allTasks = [] } = useQuery<Task[]>({
     queryKey: ["/api/tasks"],
   });
+
+  // Google Calendar integration - get events for current month
+  const currentMonthRange = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const start = formatDateString(new Date(year, month, 1));
+    const end = formatDateString(new Date(year, month + 1, 0));
+    return { start, end };
+  }, [currentDate]);
+
+  const { eventsByDate: googleEvents, isConfigured: isGoogleConfigured } = useGoogleCalendarEvents(currentMonthRange);
 
   // 🎯 FUNZIONE HELPER PER GESTIRE LE DATE SENZA PROBLEMI DI FUSO ORARIO
   const formatDateString = (date: Date): string => {
@@ -205,6 +218,8 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
         <div className="grid grid-cols-7 gap-1">
           {calendarData.map((dayData, index) => {
             const hasEvents = dayData.tasks.length > 0;
+            const hasGoogleEvents = isGoogleConfigured && googleEvents[dayData.date]?.length > 0;
+            const hasAnyEvents = hasEvents || hasGoogleEvents;
             const hasOverdue = dayData.tasks.some(task => task.status === 'overdue');
             const hasHighPriority = dayData.tasks.some(task => task.priority === 'high');
             
@@ -226,6 +241,11 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
                     onClick={() => handleDayClick(dayData.date, dayData.isCurrentMonth)}
                   >
                     <span className="relative z-10">{dayData.day}</span>
+                    
+                    {/* Google Calendar indicator */}
+                    {dayData.isCurrentMonth && (
+                      <GoogleCalendarIndicator date={dayData.date} className="z-10" />
+                    )}
                     
                     {/* Event indicators - Solo se ci sono task per questo giorno */}
                     {hasEvents && dayData.isCurrentMonth && (
@@ -253,7 +273,7 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
                 </PopoverTrigger>
                 
                 {/* Popover with day details - Solo se ci sono task */}
-                {hasEvents && (
+                {hasAnyEvents && (
                   <PopoverContent className="w-80 p-3" align="center">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
@@ -315,6 +335,12 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
                           </div>
                         ))}
                       </div>
+                      
+                      {/* Google Calendar Events Section */}
+                      <CalendarEventsIntegration 
+                        date={dayData.date} 
+                        className="border-t border-gray-200 pt-3" 
+                      />
                     </div>
                   </PopoverContent>
                 )}
@@ -346,6 +372,13 @@ export default function EnhancedCalendar({ onDateClick, onTaskClick }: EnhancedC
               <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
               <span>Appuntamenti</span>
             </div>
+            {/* Google Calendar Legend */}
+            {isGoogleConfigured && (
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                <span>Google Calendar</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
